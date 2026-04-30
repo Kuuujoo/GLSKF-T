@@ -1,0 +1,23 @@
+# 实验输出
+results/
+**/results/
+*.png
+*.xlsx
+
+# Python 缓存
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# 大体积原始数据
+*.yuv
+
+# 图像原始数据
+*.tif
+*.tiff
+
+# 视频和大文件
+*.mp4
+*.avi
+*.mat
+*.pdf

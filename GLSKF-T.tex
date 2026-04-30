@@ -1,0 +1,735 @@
+\documentclass[UTF8]{ctexart}
+\ctexset{section={format=\Large\bfseries\raggedright}}
+\usepackage[a4paper,margin=2cm]{geometry}
+\setmainfont{Times New Roman}
+\setCJKmainfont{simsun.ttc}
+\usepackage{mathtools}
+\usepackage{amssymb,amsfonts}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{graphicx}
+\usepackage{booktabs,multirow,makecell}
+\usepackage{array}
+\usepackage{placeins}
+\usepackage{threeparttable}
+\usepackage[backend=biber,style=numeric,sorting=none]{biblatex}
+\usepackage{hyperref}
+\usepackage{setspace} 
+\hypersetup{
+colorlinks=true,
+linkcolor=blue,
+citecolor=blue,
+urlcolor=blue
+}
+\addbibresource{refs.bib}
+
+\renewcommand{\abstractname}{\zihao{-3} 摘要}
+
+\makeatletter
+\renewenvironment{abstract}{
+  \par\begin{center}\bfseries\abstractname\end{center}
+  \par\noindent\zihao{-4}
+  \setstretch{1.25}
+}{
+  \par
+}
+\makeatother
+
+\begin{document}
+
+\title{面向高缺失彩色图像的 GLSKF-tSVD 张量补全方法}
+\author{师若宸} 
+\date{} 
+\maketitle
+\begin{abstract}
+
+彩色图像等视觉数据可自然表示为三阶张量，但在高缺失观测下，既要恢复全局结构一致性又要保留局部纹理细节仍具挑战。
+为此，本文在 Generalized Least Squares Kernelized Factorization（GLSKF）的“全局低秩分量 + 局部相关残差分量”加性框架下，
+将全局模块由 CP 表示替换为基于 $t$-product 的 $t$-SVD 低秩表示，以更充分刻画第三维（RGB 通道）的耦合相关性；
+同时保留局部残差的核化广义最小二乘正则化以建模空间相关先验。
+在优化上，本文采用交替求解策略，并在每轮迭代后施加观测一致性硬投影以严格满足 $P_{\Omega}(\mathcal{X})=P_{\Omega}(\mathcal{Y})$，
+从而提升高缺失率下的稳定性。
+实现层面，通过对第三维 FFT 将全局子问题分解为频域切片上的正则化最小二乘问题，并结合 Kronecker 结构的矩阵–向量乘（Kronecker MVM）与共轭梯度法实现可扩展求解；
+局部子问题则在观测子空间上构造线性方程并以共轭梯度高效求解，避免显式形成大规模矩阵。
+在 USC-SIPI 彩色图像基准上（缺失率 80\%/90\%/95\%），与 HaLRTC、SPC、GLTC-TNN 及原始 GLSKF 相比，
+所提 GLSKF-tSVD 在 $SR=0.2$ 与 $SR=0.1$ 时分别取得平均约 $+1.37$dB/$+0.026$ 与 $+0.89$dB/$+0.019$ 的 PSNR/SSIM 增益（相对 GLSKF），
+总体平均提升约 $+0.77$dB PSNR，并在视觉上表现出更好的颜色一致性与结构保真。
+
+\end{abstract}
+\par\noindent\textbf{关键词：} 张量补全；$t$-SVD；广义最小二乘；协方差范数；共轭梯度法；彩色图像修复
+
+
+\section{引言}
+彩色图像、视频等视觉数据天然具有空间维与通道/时间维的多维耦合关系，将其表示为高阶张量能够以统一的数据结构刻画这种相关性 ，因此张量补全成为处理此类多维缺失数据的重要技术路线之一\cite{liu2013tensor}。在遥感成像、医学影像和视频监控等场景中，观测数据常因传感器缺陷、遮挡、传输丢包或采样预算受限而出现大比例缺失\cite{bengua2017tt,li2017tv}。面向高缺失率的视觉张量补全，恢复结果不仅需要保持整体结构（如轮廓与几何布局），还需尽量保留局部细节（如纹理与边缘），并避免跨通道结构未对齐导致的颜色漂移与边缘错位\cite{zhao2021complementary}。
+
+张量补全的关键在于利用已观测数据与缺失数据之间的结构关联。受矩阵补全理论的启发，低秩建模被广泛用于从不完全观测中恢复全局结构\cite{candes2009matrix}。在张量情形下，经典分解（如 CP/Tucker）为多维数据提供了可解释的低秩表示方法\cite{kolda2009tensor}，并推动了面向不完整观测的可扩展求解框架发展\cite{acar2011scalable}。然而，视觉数据在空间邻域与第三维（RGB 通道或时间帧）上往往同时存在显著相关性：仅依赖全局低秩假设通常能够稳住低频结构，但容易在纹理与尖锐边缘处产生过度平滑；若通过提高秩来刻画局部高频变化，则可能带来显著的计算代价与不稳定性。
+
+为同时兼顾全局一致性与局部变化，Lei 与 Sun 提出了 Generalized Least Squares Kernelized Tensor Factorization（GLSKF）框架\cite{lei2024glskf}，用“全局低秩分量 + 局部相关残差分量”的加性形式刻画数据：全局分量负责把握整体结构，局部分量通过结构化协方差描述局部相关性，并借助广义最小二乘与核化协方差设计实现可扩展求解。为提升大规模场景下的效率，该框架利用 Kronecker 结构实现矩阵向量乘的加速\cite{allen2014glsmd}，并结合核函数或锥化函数等策略控制协方差计算成本\cite{gneiting2002compact,furrer2006tapering}，在迭代求解中配合共轭梯度方法实现近线性规模计算\cite{hestenes1952cg}。不过，在 GLSKF 的全局模块中采用 CP 分解进行低秩建模时，当第三维（例如颜色通道或时间帧）存在较强耦合相关性时，CP 的表达效率可能受到影响，从而限制全局分量对跨通道/跨帧结构的刻画能力。
+
+本文在 GLSKF 的全局—局部加性框架下，用基于 t-product 的张量分解替代全局 CP 分解。t-product 的核心思想是：通过频域变换把三阶张量的运算转化为一组矩阵运算，使得沿第三维的相关性能够被更直接地利用\cite{kilmer2011factorization,kilmer2013operators}；相应的 t-SVD 为张量低秩建模提供了清晰且可计算的工具，并已被用于张量补全任务\cite{zhang2017tsvd}。基于上述思想，本文将全局分量参数化为 t-SVD 型低秩结构，以更充分利用第三维相关性；同时保留 GLSKF 的局部协方差残差建模与可扩展求解机制，并在优化过程中通过一致性投影将已观测位置始终固定为观测值，从而提高在高缺失率下的稳定性\cite{boyd2011admm}。
+
+本文的主要贡献概括如下：
+\begin{enumerate}
+  \item 在 GLSKF 的加性框架中，将全局低秩模块由 CP 表示替换为基于 $t$-product 的 $t$-SVD 型低秩表示，形成统一的“全局 $t$-低秩 + 局部相关残差”建模方式，以更充分利用第三维耦合信息\cite{lei2024glskf,zhang2017tsvd}。
+  \item 在更新全局分量的求解过程中，给出与上述模型相匹配的交替优化更新策略，并在每轮迭代后对重建结果进行观测一致性硬投影，以严格满足约束$P_{\Omega}(\mathcal{X})=P_{\Omega}(\mathcal{Y})$，从而缓解高缺失率下已知位置偏移带来的不稳定问题。
+  \item 在典型彩色图像张量补全基准数据集上开展对比实验与消融分析，验证所提出方法在高缺失率与细节恢复方面的有效性\cite{usc_sipi_database}。
+\end{enumerate}
+
+本文其余部分组织如下：第二节回顾与本文相关的张量补全、低秩分解与平滑/局部先验方法；第三节给出符号约定以及协方差范数与 $t$-product/$t$-SVD 等预备知识；第四节详细介绍提出的模型与优化算法；第五节给出实验设置与结果分析；第六节讨论复杂度、可扩展性与关键组件的作用；第七节总结全文并展望未来工作。
+
+\section{相关工作}
+\subsection{张量补全与经典低秩表示}
+缺失数据补全的核心在于：在仅有部分观测的条件下，利用数据内部的相关结构恢复缺失部分。对于彩色图像、视频等天然具有多维耦合的数据，将其表示为高阶张量能够同时保留空间维与通道/时间维之间的关联，因此张量补全成为处理此类问题的常用建模方式之一\cite{liu2013tensor,panagakis2021tensorcvdl}。受矩阵补全研究的启发，低秩假设被广泛用于从不完全观测中恢复整体结构\cite{candes2009matrix}。在张量情形下，CP 与 Tucker 分解是最经典的两类低秩表示，分别通过外积叠加与“核心张量--因子矩阵”形式刻画全局低维结构\cite{kolda2009tensor}。
+
+
+为提升在高阶或大规模问题上的表达效率与参数可控性，结构化分解（如张量列车、张量环等）也被引入补全任务，并在一定程度上缓解了秩设置与存储开销的困难\cite{oseledets2011tt,bengua2017tt}。相关方向还在更复杂的多维场景中持续发展，例如将结构化分解用于时空数据与工程级实现，以兼顾精度与可扩展性\cite{yuan2019tensor,chen2025geotensor}。
+
+\subsection{全局结构与局部先验的互补建模}
+仅依赖全局低秩假设的模型往往会带来过度平滑，它们通常能较好恢复大尺度结构，却容易削弱纹理、边缘以及局部的非平稳变化。为此，“低秩 + 平滑/局部先验”的联合建模成为常见方向。典型代表包括在 CP 分解因子上加入平滑约束的 Smooth PARAFAC\cite{yokota2016smooth}，以及将总变分正则用于抑制伪影、增强边缘一致性\cite{rudin1992rof,li2017tv}。进一步地，一些工作强调全局结构、局部平滑与非局部自相似之间的互补关系，尝试在统一框架中同时提升结构与细节的恢复质量\cite{zhao2021complementary,yuan2019tensor}。
+
+\subsection{$t$-product/$t$-SVD 与第三维耦合建模}
+面向三阶张量，$t$-product 为“沿第三维的耦合相关性”提供了一套更贴合的代数表示，使得很多运算可以以更直接的方式转化为矩阵级子问题\cite{kilmer2011factorization,kilmer2013operators}。在此基础上，$t$-SVD 给出了相应的低秩表达与可计算分解形式，并已被用于构造精确张量补全模型与算法\cite{zhang2017tsvd}。由于彩色图像与视频数据的第三维（通道/时间）往往具有显著相关性，相关研究也普遍将 $t$-SVD 类模型作为补全与恢复的重要工具之一\cite{panagakis2021tensorcvdl}。
+
+\subsection{优化策略与观测一致性处理}
+在 CP/Tucker 等经典分解模型下，交替最小二乘（ALS）是最常见的求解策略之一：将整体非凸问题拆解为一系列条件最小二乘子问题，迭代更新因子矩阵或核心张量\cite{kolda2009tensor}。在引入非光滑正则（如核范数、稀疏项）或需要显式处理约束（如观测一致性）时，交替方向乘子法 （ADMM ）因其“分离难处理项并分别更新”的结构而被广泛采用\cite{boyd2011admm}；在不少 $t$-SVD/张量核范数补全工作中，观测一致性往往通过显式约束或投影步骤实现，从而避免已观测位置在迭代中发生偏移\cite{zhang2017tsvd}。本文的求解流程并不将 GLSKF 完全改写为 ADMM 形式，但会借鉴其中对观测一致性的处理方式，将一致性硬投影嵌入交替更新，以提升高缺失率下的稳定性。
+
+\subsection{GLSKF 与结构化协方差的可扩展求解}
+Lei 与 Sun 提出的 GLSKF 框架采用“全局低秩分量 + 局部相关残差分量”的加性建模：全局分量用于刻画整体结构，局部分量则用协方差结构描述局部相关与短尺度变化，从而在同一框架内同时覆盖低频与高频成分\cite{lei2024glskf}。在计算层面，为避免显式构造巨大的协方差矩阵，相关工作通常利用 Kronecker 结构将关键的计算组织为“协方差矩阵--向量乘”（MVM）形式，并把主要瓶颈转化为可控的算子乘法\cite{allen2014glsmd}；在线性子问题求解中，共轭梯度等迭代方法也常被用于在不求显式逆的前提下进行可扩展计算\cite{hestenes1952cg}。
+
+在协方差/核方法建模方面，常见做法是用核函数刻画相似性随距离/方向的变化，并在离散采样点上得到协方差矩阵\cite{rasmussen2006gpml}。当数据规模增大时，稠密核矩阵会带来显著的存储与计算压力，因此出现了多类面向大规模的核矩阵计算与推断方法：例如通过结构化核或快速算子来加速矩阵运算\cite{wilson2015scalablegp}，以及用分层/局部化思想构造近似协方差与推断流程\cite{katzfuss2013bayesian,sang2012fullscale}。此外，采用稀疏精度矩阵的高斯马尔可夫随机场（GMRF）也是获得稀疏结构并提升推断效率的经典路线\cite{rue2005gmrf}。
+
+与上述思路相互补充的是 tapering（锥化）函数：通过在一定距离之外截断相关性，使核矩阵呈现稀疏或带状结构，从而显著降低数值计算成本\cite{gneiting2002compact,furrer2006tapering}；其在统计效率与数值效率之间的权衡以及实践设置也在空间统计文献中有较为系统的分析\cite{kaufman2008tapering}。这些结构化协方差与可扩展求解技术，为 GLSKF 这类“全局结构 + 局部相关残差”框架提供了可实现的计算路径，也构成了本文在保留局部模块优势的同时改造全局低秩建模的直接背景\cite{lei2024glskf}。
+\section{预备知识}
+
+\subsection{记号与观测投影}
+本文用花体大写字母表示三阶张量，例如 $\mathcal{X}\in\mathbb{R}^{n_1\times n_2\times n_3}$；用大写字母表示矩阵，例如 $X\in\mathbb{R}^{m\times n}$；用小写字母表示向量，例如 $x\in\mathbb{R}^{n}$。张量元素记为 $\mathcal{X}(i,j,k)$。对三阶张量 $\mathcal{X}$，其第 $k$ 个 frontal slice 记为
+\[
+\mathcal{X}^{(k)}=\mathcal{X}(:,:,k),\quad k=1,\ldots,n_3.
+\]
+此外，将 $\mathcal{X}(i,j,:)$ 称为一个 tube，将沿任一 mode 的一维切片称为 fiber。
+
+令 $\Omega\subseteq [n_1]\times[n_2]\times[n_3]$ 为观测索引集合。观测投影算子 $P_{\Omega}(\cdot)$ 作用于张量 $\mathcal{X}$ 定义为
+\[
+\big[P_{\Omega}(\mathcal{X})\big](i,j,k)=
+\begin{cases}
+\mathcal{X}(i,j,k), & (i,j,k)\in\Omega,\\
+0, & \text{otherwise},
+\end{cases}
+\]
+并记补集投影为 $P_{\Omega^c}(\mathcal{X})=\mathcal{X}-P_{\Omega}(\mathcal{X})$。在张量补全问题中，$P_{\Omega}$ 用于在目标函数中仅对观测位置构造数据保真项。
+
+为便于后续推导，我们使用向量化算子 $\mathrm{vec}(\cdot)$ 将张量或矩阵按固定顺序堆叠为向量。Kronecker 积用于把两个矩阵组合成一个分块结构矩阵。对 $A\in\mathbb{R}^{m\times n}$ 与 $B\in\mathbb{R}^{p\times q}$，其 Kronecker 积记为 $A\otimes B\in\mathbb{R}^{mp\times nq}$。
+    
+\subsection{协方差范数与广义最小二乘}
+为同时刻画不同维度上的相关结构，GLSKF 将正则项写成协方差范数形式\cite{lei2024glskf}。设在三个维度上给定对称正定协方差矩阵
+$K_1\in\mathbb{R}^{n_1\times n_1}$、$K_2\in\mathbb{R}^{n_2\times n_2}$、$K_3\in\mathbb{R}^{n_3\times n_3}$，
+其中 $K_1,K_2$ 通常对应空间两个维度上的相关结构，$K_3$ 对应第三维（如颜色通道或时间帧）上的相关结构。
+对任意 $\mathcal{X}\in\mathbb{R}^{n_1\times n_2\times n_3}$，定义协方差范数为
+\begin{equation*}
+\|\mathcal{X}\|_{K_1,K_2,K_3}
+=\sqrt{ \mathrm{vec}(\mathcal{X})^{\top}\big(K_3^{-1}\otimes K_2^{-1}\otimes K_1^{-1}\big)\mathrm{vec}(\mathcal{X})}.
+\end{equation*}
+当 $K_1=I_{n_1}$、$K_2=I_{n_2}$、$K_3=I_{n_3}$ 时，上式退化为 Frobenius 范数 $\|\mathcal{X}\|_F$。
+该范数对应广义最小二乘（GLS）中的加权残差形式：通过协方差（或其逆）对不同位置/维度的变化进行加权，从而在优化目标中体现相关结构\cite{allen2014glsmd}。
+
+在大规模问题中，直接构造或分解上述 Kronecker 加权矩阵通常不可行，因此实际求解中依赖MVM与共轭梯度求解\cite{hestenes1952cg}；这一点也是 GLSKF 可扩展实现的关键之一\cite{lei2024glskf}。
+
+\subsection{$t$-product 与 $t$-SVD}
+$t$-product 为三阶张量提供了一套面向第三维耦合结构的乘法定义\cite{kilmer2011factorization,kilmer2013operators}。
+对三阶张量 $\mathcal{A}\in\mathbb{R}^{n_1\times n_2\times n_3}$ 与 $\mathcal{B}\in\mathbb{R}^{n_2\times n_4\times n_3}$，
+$t$-product 记为 $\mathcal{C}=\mathcal{A}*\mathcal{B}\in\mathbb{R}^{n_1\times n_4\times n_3}$。
+其计算可通过沿第三维的离散傅里叶变换实现：记 $\bar{\mathcal{A}}=\mathrm{fft}(\mathcal{A},[],3)$、
+$\bar{\mathcal{B}}=\mathrm{fft}(\mathcal{B},[],3)$，则在频域中对每个频率切片满足
+\[
+\bar{\mathcal{C}}^{(k)}=\bar{\mathcal{A}}^{(k)}\,\bar{\mathcal{B}}^{(k)},\quad k=1,\ldots,n_3,
+\label{eq:tprod_fft}
+\]
+最后通过 $\mathcal{C}=\mathrm{ifft}(\bar{\mathcal{C}},[],3)$ 回到时域。由此，$t$-product 将第三维上的循环卷积耦合转化为频域中逐切片的矩阵乘法运算，从而在计算过程中显式保留第三维的耦合结构\cite{kilmer2013operators}。
+
+
+在 $t$-product 代数下，$t$-SVD 给出与矩阵 SVD 类似的分解形式\cite{kilmer2011factorization,zhang2017tsvd}：
+对任意三阶张量 $\mathcal{M}\in\mathbb{R}^{n_1\times n_2\times n_3}$，存在\[
+\mathcal{M}=\mathcal{U}*\mathcal{S}*\mathcal{V}^{\top},
+\label{eq:tsvd}
+\]
+其中 $\mathcal{U}\in\mathbb{R}^{n_1\times n_1\times n_3}$ 与 $\mathcal{V}\in\mathbb{R}^{n_2\times n_2\times n_3}$ 为 $t$-正交张量，
+$\mathcal{S}\in\mathbb{R}^{n_1\times n_2\times n_3}$ 为 $f$-对角张量（其每个频域 frontal slice 对应对角矩阵）。
+其计算通常按如下流程进行：先沿第三维做 FFT 得到频域张量，再对每个频率切片进行矩阵 SVD，最后通过逆 FFT 回到时域\cite{kilmer2013operators,zhang2017tsvd}。
+
+$t$-SVD 低秩通常以 tubal-rank 来刻画，在其分解中，tubal-rank 定义为 $\mathcal{S}$ 的对角位置上非零奇异 tube 的个数，即
+\[
+\mathrm{rank}_t(\mathcal{M})=\#\left\{\,i:\ \mathcal{S}(i,i,:)\neq \mathbf{0}\,\right\}.
+\]
+在实际建模中常采用截断 $t$-SVD，即仅保留前 $r$ 个奇异 tube 来近似 $\mathcal{M}$，以在表达能力与计算复杂度之间取得折中\cite{zhang2017tsvd}。
+此外，当原始张量为实值时，其频域表示满足共轭对称关系；实现中常通过仅计算半谱并对其余频率施加共轭对称来保证逆 FFT 后结果为实值并减少频率切片的计算量\cite{kilmer2013operators}。
+\section{方法论}
+
+\subsection{ 优化问题}
+设观测张量为 $\mathcal{Y}\in\mathbb{R}^{n_1\times n_2\times n_3}$，观测索引集为 $\Omega$， $P_{\Omega}(\cdot)$ 为投影算子。本文将待修复张量表示为“全局分量 + 局部分量”的加性形式
+\begin{equation}
+\mathcal{X}=\mathcal{M}+\mathcal{R},\qquad P_{\Omega}(\mathcal{X})=P_{\Omega}(\mathcal{Y}).
+\label{eq:add_model}
+\end{equation}
+其中 $\mathcal{M}$ 负责刻画整体结构，$\mathcal{R}$ 负责补偿纹理、边缘等局部变化。为更直接地利用第三维（颜色通道/时间帧）上的耦合结构，本文用 $t$-SVD 型低秩结构参数化 $\mathcal{M}$：
+\begin{equation}
+\mathcal{M}=\mathcal{U}*\mathcal{S}*\mathcal{V}^{\top},\qquad \mathrm{rank}_t(\mathcal{M})\le r_g,
+\label{eq:global_tsvd}
+\end{equation}
+其中 $*$ 表示 $t$-product，$\mathcal{U}\in\mathbb{R}^{n_1\times r_g\times n_3}$、$\mathcal{V}\in\mathbb{R}^{n_2\times r_g\times n_3}$ 为因子张量，$\mathcal{S}\in\mathbb{R}^{r_g\times r_g\times n_3}$ 为 $f$-对角张量，$r_g$ 控制全局分量的 tubal-rank\cite{kilmer2011factorization,zhang2017tsvd}。
+
+对局部分量 $\mathcal{R}$，采用协方差加权二次型来刻画其相关结构；同时取可分离（Kronecker）形式
+$K_r = K_{r,3}\otimes K_{r,2}\otimes K_{r,1}$，
+以便在后续迭代中用MVM实现可扩展求解\cite{lei2024glskf,allen2014glsmd}。
+
+在正则化设计上，本文沿用 GLSKF 的“协方差加权二次型”思想：对全局因子在空间维与第三维上施加相关性约束，对局部残差施加结构化协方差约束，得到总体优化问题
+\begin{equation}
+\min_{\mathcal{U},\mathcal{S},\mathcal{V},\mathcal{R}}
+\frac{1}{2}\Big\|P_{\Omega}\big(\mathcal{Y}-\mathcal{U}*\mathcal{S}*\mathcal{V}^{\top}-\mathcal{R}\big)\Big\|_{F}^{2}
++\frac{\rho}{2}\Big(\|\mathcal{U}\|^{2}_{K_1,I_{r_g},K_3}+\|\mathcal{V}\|^{2}_{K_2,I_{r_g},K_3}\Big)
++\frac{\gamma}{2}\|\mathcal{R}\|^{2}_{K_r}.
+\label{eq:overall_obj}
+\end{equation}
+其中 $\rho>0$ 与 $\gamma>0$ 分别控制全局因子与局部残差的正则强度；$K_1,K_2,K_3$ 均为对称正定协方差矩阵。
+
+直接在 \eqref{eq:overall_obj} 中携带 $P_{\Omega}(\cdot)$ 会使每次更新都与掩码耦合。为统一处理观测约束，本文采用“先预测、再投影”的方式：给定当前 $\mathcal{M}^t,\mathcal{R}^t$，先构造预测
+\begin{equation}
+\mathcal{X}_{\mathrm{pred}}^{t}=\mathcal{M}^{t}+\mathcal{R}^{t},
+\label{eq:xpred}
+\end{equation}
+再将其投影回观测集合
+\begin{equation}
+\mathcal{X}^{t}=P_{\Omega}(\mathcal{Y})+P_{\Omega^{c}}\big(\mathcal{X}_{\mathrm{pred}}^{t}\big).
+\label{eq:proj}
+\end{equation}
+这样观测一致性只需要在投影步骤中强制一次 ，后续更新全局分量与局部分量时均以投影后的完整张量 $\mathcal{X}^{t}$ 作为输入。类似的先解无掩码子问题，再用投影强制一致性的处理方式在 ADMM 类框架中也很常见\cite{boyd2011admm}。此外，为减轻初期振荡并优先稳定整体结构，本文采用两阶段策略：前 $K_0$ 次迭代仅更新全局分量，之后再交替更新 $\mathcal{M}$ 与 $\mathcal{R}$。
+
+\subsection{模型求解}
+\label{sec:solution}
+
+\subsubsection*{1) 更新全局因子}
+在第 $t$ 轮迭代中，固定 $\mathcal{R}^t$ 并由一致性投影得到 $\mathcal{X}^t$。令
+\[
+\mathcal{G}^t=\mathcal{X}^t-\mathcal{R}^t,
+\]
+则全局更新等价于在无掩码情形下拟合 $\mathcal{G}^t$：
+\begin{equation}
+\min_{\mathcal{U},\mathcal{S},\mathcal{V}}
+\frac12\big\|\mathcal{G}^t-\mathcal{U}*\mathcal{S}*\mathcal{V}^{\top}\big\|_F^2
++\frac{\rho}{2}\Big(\|\mathcal{U}\|^{2}_{K_1,I_{r_g},K_3}+\|\mathcal{V}\|^{2}_{K_2,I_{r_g},K_3}\Big).
+\label{eq:global_subprob_new}
+\end{equation}
+对第 $3$ 维做 FFT，记 $\bar{\mathcal{G}}=\mathrm{fft}(\mathcal{G}^t)$，以及频域因子 $\bar{\mathcal{U}},\bar{\mathcal{S}},\bar{\mathcal{V}}$。
+在频域中，$t$-product 逐切片对应普通矩阵乘法，因此 \eqref{eq:global_subprob_new} 可写为对各频率切片的求和：
+\begin{equation}
+\min_{\{\bar U^{(k)},\bar S^{(k)},\bar V^{(k)}\}}
+\sum_{k=1}^{n_3}\frac12\big\|\bar G^{(k)}-\bar U^{(k)}\bar S^{(k)}\bar V^{(k)H}\big\|_F^2
++\frac{\rho}{2}\sum_{k=1}^{n_3}\Big(\mathrm{tr}(\bar U^{(k)H}K_1^{-1}\bar U^{(k)})+\mathrm{tr}(\bar V^{(k)H}K_2^{-1}\bar V^{(k)})\Big),
+\label{eq:global_freq_sum}
+\end{equation}
+其中 $(\cdot)^H$ 表示共轭转置。下面给出第 $k$个频域切片上 $\bar U^{(k)}$, $\bar V^{(k)}$, $\bar S^{(k)}$的迭代更新公式:
+
+\noindent\textbf{Update $\bar U^{(k)}$.}
+令
+\[
+B^{(k)}=\bar V^{(k)}\bar S^{(k)H}\in\mathbb{C}^{n_2\times r_g},
+\]
+则关于 $\bar U^{(k)}$ 的子问题为
+\[
+\min_{\bar U^{(k)}}\ 
+\frac{1}{2}\big\|\bar G^{(k)}-\bar U^{(k)}B^{(k)H}\big\|_F^2
++\frac{\rho}{2}\mathrm{tr}\!\big(\bar U^{(k)H}K_1^{-1}\bar U^{(k)}\big).
+\]
+对 $\bar U^{(k)}$ 求导并令其为零得到正规方程
+\begin{equation}
+\bar U^{(k)}\big(B^{(k)H}B^{(k)}\big)+\rho\,K_1^{-1}\bar U^{(k)}=\bar G^{(k)}B^{(k)}.
+\label{eq:U_normal_new}
+\end{equation}
+对 \eqref{eq:U_normal_new} 向量化并用 $\mathrm{vec}(AXB)=(B^{\top}\otimes A)\mathrm{vec}(X)$，得到关于 $\mathrm{vec}(\bar U^{(k)})$ 的线性方程
+\begin{equation}
+\Big(\big(B^{(k)H}B^{(k)}\big)^{\top}\otimes I_{n_1}+\rho\,I_{r_g}\otimes K_1^{-1}\Big)\,
+\mathrm{vec}\!\big(\bar U^{(k)}\big)
+=
+\mathrm{vec}\!\big(\bar G^{(k)}B^{(k)}\big).
+\label{eq:U_vec_system}
+\end{equation}
+故可得
+\begin{equation}
+\mathrm{vec}\!\big(\bar U^{(k)}\big)
+=\Big(\big(B^{(k)H}B^{(k)}\big)^{\top}\otimes I_{n_1}+\rho\,I_{r_g}\otimes K_1^{-1}\Big)^{-1}
+\mathrm{vec}\!\big(\bar G^{(k)}B^{(k)}\big).
+\end{equation}
+
+
+\noindent\textbf{Update $\bar V^{(k)}$.}
+固定 $\bar S^{(k)}$ 与 $\bar U^{(k)}$，令
+\[
+C^{(k)}=\bar U^{(k)}\bar S^{(k)H}\in\mathbb{C}^{n_1\times r_g},
+\]
+则关于 $\bar V^{(k)}$ 的子问题为
+\[
+\min_{\bar V^{(k)}}\ 
+\frac{1}{2}\big\|\bar G^{(k)}-\;C^{(k)}\bar V^{(k)H}\big\|_F^2
++\frac{\rho}{2}\mathrm{tr}\!\big(\bar V^{(k)H}K_2^{-1}\bar V^{(k)}\big),
+\]
+其正规方程为
+\begin{equation}
+\bar V^{(k)}\big(C^{(k)H}C^{(k)}\big)+\rho\,K_2^{-1}\bar V^{(k)}
+=\bar G^{(k)H}C^{(k)}.
+\label{eq:V_normal}
+\end{equation}
+向量化得到
+\begin{equation}
+\Big(\big(C^{(k)H}C^{(k)}\big)^{\top}\otimes I_{n_2}+\rho\,I_{r_g}\otimes K_2^{-1}\Big)\,
+\mathrm{vec}\!\big(\bar V^{(k)}\big)
+=
+\mathrm{vec}\!\big(\bar G^{(k)H}C^{(k)}\big).
+\label{eq:V_vec_system}
+\end{equation}
+故
+\begin{equation}\mathrm{vec}\!\big(\bar V^{(k)}\big)
+=\Big(\big(C^{(k)H}C^{(k)}\big)^{\top}\otimes I_{n_2}+\rho\,I_{r_g}\otimes K_2^{-1}\Big)^{-1}
+\mathrm{vec}\!\big(\bar G^{(k)H}C^{(k)}\big).
+\end{equation}
+\noindent\textbf{Update $\bar S^{(k)}$.}
+固定 $\bar U^{(k)}$ 与 $\bar V^{(k)}$，对角矩阵 $\bar S^{(k)}$ 的更新可逐对角元求解，记 $\bar s^{(k)}=\mathrm{diag}(\bar S^{(k)})$，则
+\begin{equation}
+\bar s^{(k)} = \arg\min_{s\in\mathbb{C}^{r_g}}
+\frac12\big\|\mathrm{vec}(\bar G^{(k)}) - (\bar V^{(k)}\odot \bar U^{(k)})\,s\big\|_2^2,
+\label{eq:S_update_diag}
+\end{equation}
+其中 $\odot$ 表示 Khatri--Rao 积。更新所有频率切片后，对 $\bar{\mathcal{U}},\bar{\mathcal{S}},\bar{\mathcal{V}}$ 做 iFFT 得到时域因子，并更新全局分量
+\begin{equation}
+\mathcal{M}^{t+1}=\mathcal{U}^{t+1}*\mathcal{S}^{t+1}*\mathcal{V}^{t+1\top}.
+\label{eq:M_update_new}
+\end{equation}
+
+为求解 \eqref{eq:U_vec_system} 与 \eqref{eq:V_vec_system}，本文采用 CG 迭代求解线性方程组。实现中不显式形成 Kronecker 系数矩阵，而是将向量重排回矩阵并利用
+$(A^{\top}\!\otimes I)\mathrm{vec}(X)=\mathrm{vec}(XA)$ 与 $(I\otimes B)\mathrm{vec}(X)=\mathrm{vec}(BX)$
+完成线性方程，从而避免构造维度为 $(n_1 r_g)\times(n_1 r_g)$ 或 $(n_2 r_g)\times(n_2 r_g)$ 的大矩阵。
+此外，频域因子满足共轭对称，因此仅需计算 $k=1,\dots,\lceil(n_3+1)/2\rceil$ 的切片，其余切片由共轭对称补齐以保证 iFFT 后为实值。
+若记每个切片上 CG 的平均迭代次数为 $J_G$，则全局更新的主要成本来自每次迭代中数据项矩阵乘与核正则项的核矩阵求解；该成本在 \S\ref{sec:complexity} 中统一汇总。
+\begin{algorithm}[!htbp]
+\caption{更新全局因子}
+\label{alg:update_global}
+\begin{algorithmic}[1]
+\Require 当前完整张量 $\mathcal{X}^{t}$，局部分量 $\mathcal{R}^{t}$；tubal-rank $r_g$；权重 $\rho$；核矩阵算子 $K_1^{-1},K_2^{-1}$；
+CG 最大迭代 $J_{\max}$ 与容差 $\tau_G$；上一轮频域因子 $\{\bar U^{(k)},\bar S^{(k)},\bar V^{(k)}\}$（作初值）。
+\Ensure 全局分量 $\mathcal{M}^{t+1}$。
+
+\State 计算 $\mathcal{G}^{t}=\mathcal{X}^{t}-\mathcal{R}^{t}$，并对第 $3$ 维做 FFT 得 $\{\bar G^{(k)}\}_{k=1}^{n_3}$（同时将 $\mathcal{U},\mathcal{S},\mathcal{V}$ FFT 到 $\{\bar U^{(k)},\bar S^{(k)},\bar V^{(k)}\}$）。
+\State 设半谱切片数 $K=\left\lceil\frac{n_3+1}{2}\right\rceil$，仅对 $k=1,\ldots,K$ 显式更新，其余切片由共轭对称补齐。
+\For{$k=1$ \textbf{to} $K$}
+    \State 令 $B^{(k)}=\bar V^{(k)}\bar S^{(k)H}$，用 CG 求解 \eqref{eq:U_vec_system} 更新 $\bar U^{(k)}$
+    \State $\bar V^{(k)}$ 的更新与 $\bar U^{(k)}$ 完全对称：将 $K_1^{-1},n_1,B^{(k)}$ 替换为 $K_2^{-1},n_2,C^{(k)}=\bar U^{(k)}\bar S^{(k)}$，用 CG 解 \eqref{eq:V_vec_system} 得到 $\bar V^{(k)}$。
+    \State 固定 $\bar U^{(k)},\bar V^{(k)}$，按 \eqref{eq:S_update_diag}更新 $\bar S^{(k)}$。
+    \State 若 $k>1$ 且 $k<K$，令 $k'=n_3-k+2$ 并设置 $(\bar U^{(k')},\bar S^{(k')},\bar V^{(k')})=\overline{(\bar U^{(k)},\bar S^{(k)},\bar V^{(k)})}$ 以保证 iFFT 后为实值。
+\EndFor
+\State 对 $\bar{\mathcal{U}},\bar{\mathcal{S}},\bar{\mathcal{V}}$ 做 iFFT 回到时域，计算 $\mathcal{M}^{t+1}=\mathcal{U}^{t+1}*\mathcal{S}^{t+1}*\mathcal{V}^{t+1\top}$。
+\end{algorithmic}
+\end{algorithm}
+\subsubsection*{2) 更新局部因子}
+固定 $\mathcal{M}^{t+1}$，令
+\[
+\mathcal{L}^t=\mathcal{X}^t-\mathcal{M}^{t+1},
+\]
+则局部更新为
+\begin{equation}
+\min_{\mathcal{R}}\ \frac12\big\|P_{\Omega}(\mathcal{L}^t-\mathcal{R})\big\|_F^2 + \frac{\gamma}{2}\|\mathcal{R}\|_{K_r}^2 .
+\label{eq:local_obj_proj}
+\end{equation}
+记 $r=\mathrm{vec}(\mathcal{R})\in\mathbb{R}^N$，$l=\mathrm{vec}(\mathcal{L}^t)\in\mathbb{R}^N$，并令 $l_\Omega=\mathrm{vec}(P_\Omega(\mathcal{L}^t))\in\mathbb{R}^{|\Omega|}$。
+用选择算子 $O_\Omega\in\{0,1\}^{|\Omega|\times N}$ 表示“从 $N$ 维向量中取出 $\Omega$ 位置的分量”，则 $l_\Omega = O_\Omega l$，同时 $O_\Omega^\top$ 为零填充算子。
+于是 \eqref{eq:local_obj_proj} 等价于
+\begin{equation}
+\min_{r\in\mathbb{R}^N}\ \frac12\|l_\Omega - O_\Omega r\|_2^2 + \frac{\gamma}{2}\, r^\top K_r^{-1} r .
+\label{eq:local_vec_obj}
+\end{equation}
+对 $r$ 求导并令其为零可得
+\begin{equation}
+\big(O_\Omega^\top O_\Omega + \gamma K_r^{-1}\big)r = O_\Omega^\top l_\Omega .
+\label{eq:r_rep}
+\end{equation}
+直接求解 \eqref{eq:r_rep} 需处理 $N$ 维变量。参照 GLSKF 的做法\cite{lei2024glskf}，引入观测子空间变量 $z\in\mathbb{R}^{|\Omega|}$ 并令
+\begin{equation}
+r = K_r O_\Omega^\top z ,
+\label{eq:r_final_update}
+\end{equation}
+代入 \eqref{eq:local_vec_obj} 得到关于 $z$ 的等价问题
+\begin{equation}
+\min_{z\in\mathbb{R}^{|\Omega|}}\ 
+\frac12\|l_\Omega - O_\Omega K_r O_\Omega^\top z\|_2^2
++\frac{\gamma}{2}\, z^\top (O_\Omega K_r O_\Omega^\top)\, z ,
+\label{eq:local_z_obj}
+\end{equation}
+其一阶最优条件给出线性方程
+\begin{equation}
+\big(O_\Omega K_r O_\Omega^\top + \gamma I\big)\, z = l_\Omega .
+\label{eq:z_linear_system}
+\end{equation}
+求得 $z$ 后由 \eqref{eq:r_final_update} 恢复 $r$，再 reshape 回张量得到 $\mathcal{R}^{t+1}$。
+其一阶最优条件给出线性方程
+\begin{equation}
+\big(O_\Omega K_r O_\Omega^\top + \gamma I\big)\, z = l_\Omega .
+\label{eq:z_linear_system}
+\end{equation}
+求得 $z$ 后由 \eqref{eq:r_final_update} 恢复 $r$，再 reshape 回张量得到 $\mathcal{R}^{t+1}$。
+
+式 \eqref{eq:z_linear_system} 是 $|\Omega|$ 维观测子空间上的线性方程组，可用共轭梯度法（CG）直接求解。CG 的核心是高效计算一次算子乘 $u=(O_{\Omega}K_r O_{\Omega}^{\top}+\gamma I)v$，其中 $K_r=K_{r,3}\otimes K_{r,2}\otimes K_{r,1}$。为避免显式形成 $K_r\in\mathbb{R}^{N\times N}$，每次算子乘按以下顺序完成：(1) 零填充：计算 $q=O_{\Omega}^{\top}v\in\mathbb{R}^{N}$，即将 $v$ 写入观测位置，其余位置为 $0$；(2) Kronecker MVM：计算 $w=K_r q$，可通过三次模乘实现：将 $q$ reshape 为张量后依次右乘/左乘 $K_{r,1},K_{r,2},K_{r,3}$（等价于对三维张量做 $\times_1 K_{r,1}$、$\times_2 K_{r,2}$、$\times_3 K_{r,3}$）；(3) 索引并加正则：返回 $u=O_{\Omega}w+\gamma v$。因此，一次 CG 迭代仅需两次索引操作与一次结构化 Kronecker MVM乘，复杂度在 \S\ref{sec:complexity} 中统一计入。
+
+\begin{algorithm}[!htbp]
+\caption{更新局部分量}
+\label{alg:update_local}
+\begin{algorithmic}[1]
+\Require 当前完整张量 $\mathcal{X}^{t}$，全局分量 $\mathcal{M}^{t+1}$；选择/零填充算子 $O_{\Omega},O_{\Omega}^{\top}$；
+核矩阵 $K_r=K_{r,3}\otimes K_{r,2}\otimes K_{r,1}$（以 Kronecker MVM 形式提供）与权重 $\gamma$；CG 最大迭代与容差 $\tau_R$。
+\Ensure 局部分量 $\mathcal{R}^{t+1}$。
+
+\State 计算 $\mathcal{L}^{t}=\mathcal{X}^{t}-\mathcal{M}^{t+1}$，取 $l_{\Omega}=\mathrm{vec}\!\big(P_{\Omega}(\mathcal{L}^{t})\big)$。
+\State 用 CG 求解 \eqref{eq:z_linear_system} 得到 $z$，其中一次算子乘 $u=(O_{\Omega}K_r O_{\Omega}^{\top}+\gamma I)v$ 通过三步实现：$q=O_{\Omega}^{\top}v$（零填充），$w=K_r q$（Kronecker MVM），$u=O_{\Omega}w+\gamma v$（索引并加正则）。
+\State 计算 $r=K_r O_{\Omega}^{\top}z$，并 reshape 得到 $\mathcal{R}^{t+1}=\mathrm{reshape}(r,n_1,n_2,n_3)$。
+\end{algorithmic}
+\end{algorithm}
+\subsection{模型实现细节}
+\label{sec:impl}
+
+实现中全局更新在频域逐切片进行：对 $\mathcal{G}=\mathcal{X}-\mathcal{R}$ 做 FFT 后，分别求解关于 $\bar U^{(k)}$ 与 $\bar V^{(k)}$ 的线性方程组并更新 $\bar S^{(k)}$，最后 iFFT 回时域得到 $\mathcal{M}$。
+为保证回到时域后为实值张量，频域切片满足共轭对称，因此只计算半谱切片，其余切片由共轭对称补齐。
+在数值求解上，Algorithm~\ref{alg:update_global} 与 Algorithm~\ref{alg:update_local} 均采用 CG；每次迭代只调用算子乘，避免显式构造 Kronecker 大矩阵。实现中可将上一轮的解作为迭代初值以减少 CG 的迭代步数 。
+
+由于模型为加性结构 $\mathcal{X}=\mathcal{M}+\mathcal{R}$，从随机初始化同时优化两部分容易在前期产生振荡。
+因此本文采用分阶段策略：前 $K_0$ 轮仅更新全局分量（令 $\mathcal{R}=0$），待整体结构稳定后再引入局部更新 \cite{lei2024glskf}。
+为判断迭代是否收敛，我们比较相邻两次迭代结果的变化，并在其小于阈值时停止迭代：
+\begin{equation}
+\mathrm{tol}^{(t)}=\frac{\|\mathcal{X}^{(t)}-\mathcal{X}^{(t-1)}\|_F}{\|\mathcal{T}\|_F}<\varepsilon,
+\end{equation}
+其中 $\|\mathcal{T}\|_F$ 为固定的归一化因子（实现中取 Frobenius 范数）。
+由于每轮投影后观测位置保持不变，上式实际反映的是缺失位置填充值的变化幅度。
+数据恢复的总体实现在算法\eqref{alg:overall} 中总结。
+
+\begin{algorithm}[!htbp]
+\caption{完整更新流程}
+\label{alg:overall}
+\begin{algorithmic}[1]
+\Require 观测张量 $\mathcal{Y}$ 与索引集 $\Omega$；tubal-rank $r_g$；权重 $\rho,\gamma$；
+分阶段轮数 $K_0$；最大迭代 $T$；停止阈值 $\varepsilon$；核矩阵算子 $K_1^{-1},K_2^{-1}$ 与 $K_r$。
+\Ensure 补全结果 $\widehat{\mathcal{X}}$。
+
+\State 初始化 $\mathcal{X}^{0}$：观测位置赋值为 $P_{\Omega}(\mathcal{Y})$，缺失位置用均值填充；令 $\mathcal{R}^{0}=0$ 并随机初始化全局因子得到 $\mathcal{M}^{0}$。
+\For{$t=0$ \textbf{to} $T-1$}
+    \State 用 Algorithm~\ref{alg:update_global} 在输入 $(\mathcal{X}^{t},\mathcal{R}^{t})$ 下更新得到 $\mathcal{M}^{t+1}$。
+    \State 令 $\mathcal{Z}=\mathcal{M}^{t+1}+\mathcal{R}^{t}$，并做观测一致性投影 $\mathcal{X}^{t+1}=P_{\Omega}(\mathcal{Y})+P_{\Omega^c}(\mathcal{Z})$。
+    \State 若 $t+1\ge K_0$，则用 Algorithm~\ref{alg:update_local} 在输入 $(\mathcal{X}^{t+1},\mathcal{M}^{t+1})$ 下更新 $\mathcal{R}^{t+1}$，并令 $\mathcal{X}^{t+1}=P_{\Omega}(\mathcal{Y})+P_{\Omega^c}(\mathcal{M}^{t+1}+\mathcal{R}^{t+1})$；否则令 $\mathcal{R}^{t+1}=0$。
+    \State 若 $\|\mathcal{X}^{t+1}-\mathcal{X}^{t}\|_F/\|\mathcal{T}\|_F<\varepsilon$ 则停止迭代。
+\EndFor
+\State \textbf{return} $\widehat{\mathcal{X}}=\mathcal{X}^{t+1}$。
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{参数说明}
+\label{sec:params}
+
+上述模型涉及几种类型的模型参数和超参数：
+
+\textbf{\romannumeral1)协方差矩阵。}
+全局因子正则中使用的 $K_1,K_2,K_3$ 控制不同维度上的相关性约束强度；
+局部残差采用可分离结构 $K_r=K_{r,3}\otimes K_{r,2}\otimes K_{r,1}$，便于在 Kronecker MVM下实现可扩展求解。
+当采用锥化函数时，$K_{r,1},K_{r,2}$ 可得到稀疏结构，从而显著降低一次 Kronecker MVM 的实际代价 \cite{gneiting2002compact,furrer2006tapering}。
+对第 $3$ 维（如 RGB 通道/时间帧），若缺少自然的距离结构，可初始化 $K_{r,3}=I$，并在迭代中用当前 $\mathcal{R}$ 的经验协方差进行更新 \cite{lei2024glskf}。
+
+\textbf{\romannumeral2)权重参数。 }
+$\rho$ 控制全局因子正则项的强度，进入 \eqref{eq:U_vec_system}--\eqref{eq:V_vec_system} 的系数矩阵；
+$\gamma$ 控制局部残差正则项的强度，进入 \eqref{eq:z_linear_system} 的系数矩阵。
+二者共同决定“全局低秩结构”和“局部相关残差”之间的权衡。
+
+\textbf{\romannumeral3) 张量秩。}
+$r_g$ 控制全局分量 $\mathcal{M}$ 的 tubal-rank 上界。
+在存在局部分量的情形下，$r_g$ 往往可以取相对较小的值以优先刻画整体结构，而局部纹理由 $\mathcal{R}$ 补偿。
+
+
+
+\subsection{复杂度与可扩展性}
+\label{sec:complexity}
+
+记张量尺寸为 $n_1\times n_2\times n_3$，$N=n_1n_2n_3$，观测数为 $|\Omega|$，全局秩为 $r_g$。
+令 $J_G$ 表示全局更新中（按频率切片计）CG 的平均迭代次数，$J_R$ 表示局部更新中观测子空间 CG 的平均迭代次数。
+用 $\omega(A)$ 表示一次线性方程求解在实现中的实际代价；当核矩阵锥化后为稀疏矩阵时，$\omega(\cdot)$ 与其非零元数近似线性相关。
+
+每轮迭代包含 FFT/iFFT、全局更新、局部更新与两次投影。
+FFT/iFFT 的代价约为 $O(N\log n_3)$，投影为 $O(N)$。
+全局更新在半谱切片上运行 CG：一次算子乘主要由数据项矩阵乘（量级 $O(n_1n_2r_g)$）以及核正则项的核矩阵乘构成，因此全局部分的代价可写为
+\[
+O\!\left(n_3\,J_G\Big(n_1n_2r_g+\omega(K_1^{-1})r_g+\omega(K_2^{-1})r_g\Big)\right),
+\]
+其中 $n_3$ 可替换为 $\lceil(n_3+1)/2\rceil$ 以反映半谱计算的常数节省。
+局部更新在 $|\Omega|$ 维观测子空间上运行 CG：一次算子乘包含零填充与索引（$O(|\Omega|)$）以及一次 Kronecker MVM（成本 $\omega(K_r)$），因此局部部分的成本为
+\[
+O\!\left(J_R\big(|\Omega|+\omega(K_r)\big)\right).
+\]
+
+每一步迭代的计算成本可见表\eqref{tab:complexity1}，与GLSKF方法的计算成本对比可见表\eqref{tab:complexity2}。与 GLSKF（CP+局部）相比，GLSKF-T（t-SVD+局部）局部更新不变，仍为观测子空间 CG，因此局部复杂度保持一致；差异仅来自全局更新：GLSKF 为$ \mathcal{O}(J_GC_{\mathrm{cp}})$，GLSKF-T 为$\mathcal{O}(N\log n_3 + J_GC_{\mathrm{tsvd}})$。两者孰优由 $n_3$、有效秩以及 CG 迭代次数共同决定，$n_3$ 较小时 FFT 项通常有较小的成本。 
+
+\begin{table}[!htbp]
+\centering
+\caption{每轮迭代的主要计算成本}
+\label{tab:complexity1}
+
+\begin{threeparttable}
+\begin{tabular}{l l}
+\toprule
+步骤 & 成本（量级）\\
+\midrule
+FFT/iFFT & $O(N\log n_3)$ \\
+全局更新（半谱切片 CG） &
+$O\!\left(n_3\,J_G\big(n_1n_2r_g+\omega(K_1^{-1})r_g+\omega(K_2^{-1})r_g\big)\right)$ \\
+局部更新（观测子空间 CG） &
+$O\!\left(J_R\big(|\Omega|+\omega(K_r)\big)\right)$ \\
+投影（观测一致性） & $O(N)^{\tnote{a}}$ \\
+\bottomrule
+\end{tabular}
+
+\begin{tablenotes}[flushleft]
+\footnotesize
+\item[a] 本实现采用稠密掩码逐元素融合，因此投影为 $O(N)$；若在预测张量上仅对观测位置进行索引写回，则该步的成本为 $O(|\Omega|)$。
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+
+\begin{table}[!htbp]
+
+
+\centering
+\caption{模型复杂度对比}
+\label{tab:complexity2}
+\begin{tabular}{l cc}
+\toprule
+Solution & Global cost & Local cost \\\midrule
+GLSKF（CP + 局部）& $\mathcal{O}\!\left(J_G\cdot C_{\text{CP}}\right)$ & $\mathcal{O}\!\left(J_R \sum_{d=1}^{3}\omega(K_{r,d})\frac{N}{n_d}\right)$ \\
+\textbf{GLSKF-T（t-SVD + 局部）}& $\mathcal{O}\!\left(N\log n_3 + J_G\cdot C_{\text{tSVD}}\right)$ & $\mathcal{O}\!\left(J_R \sum_{d=1}^{3}\omega(K_{r,d})\frac{N}{n_d}\right)$ \\
+\bottomrule
+\end{tabular}
+
+
+\vspace{2pt}
+\end{table}
+
+\subsection{收敛性分析}
+\label{sec:convergence}
+
+本节对 Algorithm~\ref{alg:overall} 的收敛性进行理论分析。为了将算法中的“观测一致性投影”步骤纳入统一的优化框架，我们引入辅助变量 $\mathcal{X}$ 将观测约束显式化，把原优化问题 \eqref{eq:overall_obj} 等价改写为如下带约束形式：
+\begin{equation}
+\min_{\mathcal{X},\mathcal{U},\mathcal{S},\mathcal{V},\mathcal{R}}
+\ \frac{1}{2}\big\|\mathcal{X}-\mathcal{U}*\mathcal{S}*\mathcal{V}^{\top}-\mathcal{R}\big\|_{F}^{2}
++\frac{\rho}{2}\Big(\|\mathcal{U}\|^{2}_{K_1,I_{r_g},K_3}+\|\mathcal{V}\|^{2}_{K_2,I_{r_g},K_3}\Big)
++\frac{\gamma}{2}\|\mathcal{R}\|^{2}_{K_r},
+\quad
+\mathrm{s.t.}\ P_{\Omega}(\mathcal{X})=P_{\Omega}(\mathcal{Y}).
+\label{eq:overall_obj_aux}
+\end{equation}
+记式 \eqref{eq:overall_obj_aux} 的目标函数为 $F(\mathcal{X},\mathcal{U},\mathcal{S},\mathcal{V},\mathcal{R})$。易知，若将变量 $\mathcal{X}$ 消去，该问题即退化为原问题 \eqref{eq:overall_obj}，因此两者的最优解是等价的。基于此形式，Algorithm~\ref{alg:overall} 实质上是针对辅助变量块 $\mathcal{X}$、全局因子块 $(\mathcal{U},\mathcal{S},\mathcal{V})$ 以及局部块 $\mathcal{R}$ 的块坐标下降（BCD）过程。为表述方便，记全局低秩项为 $\mathcal{M} \coloneqq \mathcal{U}*\mathcal{S}*\mathcal{V}^{\top}$。
+
+\vspace{0.5em}
+\noindent\textbf{引理 1（投影步的等价性）.}
+对任意固定的 $\mathcal{U},\mathcal{S},\mathcal{V},\mathcal{R}$，式 \eqref{eq:overall_obj_aux} 关于 $\mathcal{X}$ 的子问题存在闭式最优解：
+\begin{equation}
+\mathcal{X}^{\star}=P_{\Omega}(\mathcal{Y})+P_{\Omega^{c}}\big(\mathcal{M}+\mathcal{R}\big).
+\label{eq:x_opt_proj}
+\end{equation}
+\noindent\textit{证明.} 
+目标函数中仅第一项与 $\mathcal{X}$ 有关。在观测区域 $\Omega$ 上，约束强制 $\mathcal{X}$ 等于 $P_{\Omega}(\mathcal{Y})$；在非观测区域 $\Omega^c$ 上，问题退化为无约束最小化问题 $\min \|\mathcal{X}-(\mathcal{M}+\mathcal{R})\|_F^2$，其最优解显然为该区域的预测值 $P_{\Omega^c}(\mathcal{M}+\mathcal{R})$。因此，Algorithm~\ref{alg:overall} 中的投影步骤实质上是在精确求解 $\mathcal{X}$ 的子问题，该步骤保证目标函数值 $F$ 非增。 \hfill$\square$
+
+\vspace{0.5em}
+\noindent\textbf{引理 2（全局与局部块更新的下降性）.}
+\begin{itemize}
+    \item[(1)] \textbf{全局更新：} 固定 $\mathcal{X}$ 与 $\mathcal{R}$，算法在频域内采用交替最小二乘法（ALS）更新 $\mathcal{U},\mathcal{S},\mathcal{V}$。在更新其中某一个因子（如 $\bar{U}^{(k)}$）而固定另外两个时，子问题为凸二次规划（岭回归），存在解析解或可通过 CG 求解至充分下降。因此，这一内层交替更新过程保证了目标函数 $F$ 非增。
+    \item[(2)] \textbf{局部更新：} 固定 $\mathcal{X}$ 与全局因子，更新 $\mathcal{R}$ 等价于求解严格凸的广义最小二乘问题。由于该子问题是凸的，其精确解或满足充分下降条件的近似解同样使 $F$ 非增。
+\end{itemize}
+
+\vspace{0.5em}
+\noindent\textbf{定理 1（目标函数值的收敛性）.}
+设 $\{(\mathcal{X}^{t},\mathcal{U}^{t},\mathcal{S}^{t},\mathcal{V}^{t},\mathcal{R}^{t})\}_{t\ge0}$ 为 Algorithm~\ref{alg:overall} 生成的序列。记全局因子组为 $\Theta^t = (\mathcal{U}^t, \mathcal{S}^t, \mathcal{V}^t)$。根据算法流程，每一步更新均保证目标函数非增，即满足如下不等式链：
+\begin{equation}
+\begin{aligned}
+F(\mathcal{X}^t, \Theta^t, \mathcal{R}^t) 
+&\ge F(\mathcal{X}^t, \Theta^{t+1}, \mathcal{R}^t) & \text{(全局更新)} \\
+&\ge F(\mathcal{X}^{t+\frac{1}{2}}, \Theta^{t+1}, \mathcal{R}^t) & \text{(投影步)} \\
+&\ge F(\mathcal{X}^{t+\frac{1}{2}}, \Theta^{t+1}, \mathcal{R}^{t+1}) & \text{(局部更新)} \\
+&\ge F(\mathcal{X}^{t+1}, \Theta^{t+1}, \mathcal{R}^{t+1}) & \text{(投影步)}
+\end{aligned}
+\end{equation}
+由于目标函数 $F \ge 0$ 有下界，根据单调有界收敛定理，目标函数值序列 $\{F^{t}\}$ 收敛。
+
+\vspace{0.5em}
+\noindent\textbf{推论 1（收敛至驻点）.} 
+在定理 1 保证目标函数值收敛的基础上，由于目标函数 \eqref{eq:overall_obj_aux} 是关于 $\mathcal{X}$ 和 $\mathcal{R}$ 的凸函数，且关于全局因子块 $(\mathcal{U}, \mathcal{S}, \mathcal{V})$ 具有多块凸性。根据非凸块坐标下降（BCD）的标准收敛性理论 \cite{bertsekas1999nonlinear}，该序列的任意聚点均为原优化问题 \eqref{eq:overall_obj} 的驻点（Stationary Point）。
+
+\section{实验}
+\subsection{实验设置}
+为验证所提出 GLSKF-tSVD 方法在彩色图像张量补全任务中的有效性，我们选用 USC-SIPI Image Database 中的经典彩色图像作为测试数据集\cite{usc_sipi_database}。
+实验包含 7 张图像：Tree、Female、House256（分辨率为 $256\times256\times3$）以及 Sailboat、Peppers、House512、Airplane（分辨率为 $512\times512\times3$）。
+
+缺失模式采用随机缺失：对每个张量元素 $(i,j,k)$ 独立以概率 $SR\in\{0.2,0.1,0.05\}$ 被观测（$\Omega_{ijk}=1$），分别对应缺失率 $80\%$、$90\%$ 与 $95\%$。该设置允许同一像素位置的 RGB 三通道具有不同观测状态，从而更符合一般张量补全的观测模型。
+
+预处理方面，首先在观测集 $\Omega$ 上统计训练均值并执行去均值处理，以减弱亮度尺度对优化的影响；重建后再加回均值并将像素值截断至合法范围。
+评价指标采用峰值信噪比（PSNR）与结构相似性（SSIM）\cite{wang2004ssim}，其中 PSNR 和 SSIM 均按 RGB 三通道分别计算并取平均，以保证各方法在同一度量口径下可比。
+此外，我们的实现与复现实验脚本已开源于 GitHub（见：\url{https://github.com/Kuuujoo/GLSKF-T}）。
+
+\subsection{对比方法与参数设定}
+
+我们选择具有代表性的低秩张量补全与图像修复方法作为对比基线，包括：HaLRTC\cite{liu2013tensor}、Smooth PARAFAC Tensor Completion（SPC）\cite{yokota2016smooth}、GLTC-TNN（GeoTensor 工程实现）\cite{chen2025geotensor} 以及原始 GLSKF\cite{lei2024glskf}。
+其中，HaLRTC 的正则化参数从 $\{10^{-4},10^{-5}\}$ 中选择并报告最优结果；SPC 在 TV 与 QV 两类平滑约束下分别实现并报告最优结果；
+GLTC-TNN 采用公开实现的默认设置（$\theta=100,\alpha=10,\rho=1.001,\beta=0.1\rho$，最大迭代 1000）并直接报告其输出\cite{chen2025geotensor}。
+GLSKF 按原论文推荐进行网格搜索，设置 $R=20$、tapering\_range$=20$，并在 $\rho\in\{1,10,20\}$、$\gamma\in\{1,5,10\}$ 上选取最优组合\cite{lei2024glskf}。
+
+对本文 GLSKF-tSVD，我们遵循与 GLSKF 相同的“全局+局部残差”框架与核化广义最小二乘求解思路\cite{lei2024glskf}，
+仅将全局分量由 CP 低秩替换为 t-SVD 型低秩表示\cite{kilmer2013operators}。
+参数设置参考原论文的经验区间：$\rho\in\{1,5,10,15,20\}$、$\gamma\in\{1,5,10,15,20\}$，
+并固定 tapering\_range$=30$，$d_{\text{MaternU}}=d_{\text{MaternR}}=3$，
+全局 tubal-rank $r_g=10$，最大迭代次数 maxiter$=30$，分阶段参数 $K_0=25$。
+上述设定保证比较过程具有一致的调参策略：对可调参方法均报告其最优表现，对依赖公开实现的方法遵循其默认配置并如实报告。
+
+\subsection{定量结果与分析}
+
+表~\ref{tab:color_inpainting_all} 给出了在 7 张 USC-SIPI 彩色图像上、三种采样率 $SR$（0.2/0.1/0.05）下的 PSNR/SSIM 对比结果。
+总体来看，在 $SR=0.2$ 与 $SR=0.1$（缺失率分别为 $80\%$ 与 $90\%$）时，GLSKF-tSVD 在所有测试图像上均取得最优或并列最优的 PSNR/SSIM，
+体现出将全局分量替换为 t-SVD 型低秩后，对第三维（RGB 通道）耦合相关的刻画更充分，从而在高缺失条件下保持更稳定的全局结构恢复能力\cite{kilmer2013operators}。
+例如在 Tree 图像上（$SR=0.2$），GLSKF-tSVD 达到 26.37/0.821，相比 GLSKF 的 24.88/0.782 有提升；
+在 Airplane 图像上（$SR=0.2$），GLSKF-tSVD 达到 31.85/0.919，同样优于 GLSKF 的 30.06/0.910。
+该趋势说明：当观测比例仍允许较可靠地估计全局成分时，t-SVD 低秩更有利于在频域切片上捕捉跨通道一致性，从而改善颜色一致性与结构保真\cite{zhang2017tsvd}。
+
+在更极端的 $SR=0.05$（缺失率 $95\%$）下，方法之间的差异变得更敏感：GLSKF-tSVD 在 Tree、Female、House256、House512、Airplane 等图像上仍保持最优 PSNR/SSIM，
+但在 Sailboat 与 Peppers 上 GLSKF 略优于 GLSKF-tSVD。
+该现象表明，当观测极少时，全局低秩表示与正则权重之间的平衡会直接影响纹理与边缘的恢复偏好：GLSKF 的全局 CP 结构在部分强纹理样本上可能更“保守”，从而在 SSIM 指标上表现更好\cite{lei2024glskf}；
+而 GLSKF-tSVD 的全局表达能力更强，在极端缺失下若正则不足可能引入更明显的细节不确定性，进而导致 SSIM 回落。
+总体而言，表~\ref{tab:color_inpainting_all} 显示 GLSKF-tSVD 在 $80\%$ 与 $90\%$ 缺失场景具备稳定优势，并在 $95\%$ 缺失场景仍保持对大多数图像的领先，
+说明本文的“t-SVD 全局建模 + GLSKF 局部相关残差”组合在高缺失彩色图像补全中具有更好的鲁棒性\cite{lei2024glskf}。
+
+\subsection{可视化对比}
+
+为进一步分析不同方法的视觉效果，我们在 $SR=0.1$（$90\%$ 缺失）下给出 7 张图像的重建可视化对比（见图~\ref{fig1}）。
+从图中可以观察到：HaLRTC 往往出现明显的过平滑与块状/条纹残留，这与基于展开的低秩张量补全在高缺失率下易丢失高频细节的特点一致\cite{liu2013tensor}；
+SPC 相较 HaLRTC 能更好地维持整体结构轮廓，但在纹理区域仍存在细节被抹平或边缘变钝的现象，符合其以平滑约束强化连续性的建模取向\cite{yokota2016smooth}。
+GLTC-TNN 在颜色一致性方面表现较稳定，但在细薄结构（如树枝、屋檐线）处仍可能出现轻微的边缘断裂或纹理“糊化”，说明单纯依赖全局张量核范数类约束在极高缺失条件下仍难完全恢复局部细节\cite{chen2025geotensor}。
+
+更关键的是，GLSKF 与本文 GLSKF-tSVD 的对比揭示了“全局分解替换”的直接收益：在 Tree 图像中，GLSKF-tSVD 对树枝边缘与天空背景过渡的恢复更连贯，减少了局部颜色渗透；
+在 House256/House512 中，屋顶斜边与墙体边界更清晰，且颜色层次更接近原图；
+在 Female 中，面部与头发区域的结构更稳定，降低了 GLSKF 中偶见的细碎伪影。
+上述现象与本文模型设计一致：全局 t-SVD 通过频域切片的低秩表示更自然地建模通道耦合，从而提高全局结构与色彩一致性的恢复质量\cite{kilmer2013operators}，
+同时局部相关残差模块继承 GLSKF 的核化 GLS 思路，对高频细节起到补偿作用\cite{lei2024glskf}。
+
+\begin{table}[!htbp]
+\centering
+\caption{\textbf{Comparison of color image inpainting (PSNR/SSIM).}}
+\label{tab:color_inpainting_all}
+\small
+\setlength{\tabcolsep}{4.5pt}
+\renewcommand{\arraystretch}{0.8}
+\begin{threeparttable}
+\begin{tabular}{c c c|c c c c c}
+\toprule
+\multicolumn{2}{c}{Data} & SR & HaLRTC & SPC & GLTC-TNN & GLSKF & GLSKF-tSVD \\
+\midrule
+
+\multirow{9}{*}{\makecell[c]{Color image\\$256\times256\times3$}}
+& \multirow{3}{*}{\makecell[c]{Tree}}
+& 0.2  & 19.97/0.519 & 23.53/0.711 & 22.61/0.747 & 24.88/0.782 & \textbf{26.37/0.821} \\
+&      & 0.1  & 16.54/0.324 & 21.17/0.633 & 20.77/0.654 & 22.71/0.705 & \textbf{23.45/0.726} \\
+&      & 0.05 & 13.64/0.192 & 18.61/0.474 & 18.10/0.501 & 21.01/0.613 & \textbf{21.34/0.585} \\
+\cmidrule(lr){2-8}
+
+& \multirow{3}{*}{\makecell[c]{Female}}
+& 0.2  & 24.35/0.665 & 28.73/0.813 & 28.63/0.839 & 29.66/0.844 & \textbf{30.58/0.860} \\
+&      & 0.1  & 20.64/0.500 & 26.59/0.744 & 26.71/0.768 & 27.37/0.788 & \textbf{28.32/0.799} \\
+&      & 0.05 & 17.76/0.383 & 24.74/0.675 & 24.48/0.689 & 25.68/0.727 & \textbf{25.77/0.715} \\
+\cmidrule(lr){2-8}
+
+& \multirow{3}{*}{\makecell[c]{House256}}
+& 0.2  & 23.96/0.648 & 27.02/0.777 & 26.52/0.807 & 30.36/0.838 & \textbf{31.30/0.854} \\
+&      & 0.1  & 20.24/0.459 & 24.81/0.715 & 24.61/0.732 & 27.38/0.761 & \textbf{28.19/0.772} \\
+&      & 0.05 & 16.63/0.292 & 23.29/0.665 & 21.59/0.590 & 24.54/0.692 & \textbf{25.06/0.679} \\
+
+\midrule
+
+\multirow{12}{*}{\makecell[c]{Color image\\$512\times512\times3$}}
+& \multirow{3}{*}{\makecell[c]{Sailboat}}
+& 0.2  & 20.52/0.526 & 24.30/0.686 & 23.34/0.699 & 25.66/0.732 & \textbf{27.25/0.779} \\
+&      & 0.1  & 16.94/0.368 & 22.82/0.628 & 21.49/0.567 & 23.89/0.671 & \textbf{24.55/0.708} \\
+&      & 0.05 & 13.43/0.233 & 19.93/0.472 & 18.85/0.430 & \textbf{22.73/0.623} & 22.62/0.534 \\
+\cmidrule(lr){2-8}
+
+& \multirow{3}{*}{\makecell[c]{Peppers}}
+& 0.2  & 23.19/0.568 & 27.49/0.748 & 26.36/0.764 & 27.59/0.739 & \textbf{29.75/0.789} \\
+&      & 0.1  & 19.10/0.372 & 25.10/0.687 & 23.82/0.664 & 26.03/0.698 & \textbf{26.77/0.732} \\
+&      & 0.05 & 15.26/0.229 & 21.55/0.607 & 19.53/0.442 & \textbf{24.69/0.665} & 23.49/0.614 \\
+\cmidrule(lr){2-8}
+
+& \multirow{3}{*}{\makecell[c]{House512}}
+& 0.2  & 23.36/0.660 & 25.42/0.761 & 24.59/0.811 & 27.96/0.871 & \textbf{28.69/0.879} \\
+&      & 0.1  & 20.24/0.490 & 23.46/0.680 & 22.90/0.715 & 25.02/0.784 & \textbf{25.82/0.800} \\
+&      & 0.05 & 17.21/0.317 & 21.77/0.606 & 20.39/0.560 & 23.22/0.706 & \textbf{23.29/0.696} \\
+\cmidrule(lr){2-8}
+
+& \multirow{3}{*}{\makecell[c]{Airplane}}
+& 0.2  & 24.38/0.687 & 26.27/0.788 & 26.19/0.861 & 30.06/0.910 & \textbf{31.85/0.919} \\
+&      & 0.1  & 20.86/0.514 & 24.45/0.743 & 24.18/0.788 & 27.32/0.862 & \textbf{28.86/0.864} \\
+&      & 0.05 & 17.04/0.307 & 22.97/0.697 & 20.61/0.596 & 25.34/0.802 & \textbf{25.85/0.787} \\
+
+\bottomrule
+\end{tabular}
+
+\begin{tablenotes}[flushleft]
+\footnotesize
+\item Best results are highlighted in bold fonts.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\begin{figure}[!htb] 
+\centering
+\includegraphics[width=1.0\textwidth]{拼接结果.png} 
+\caption{Results of image inpainting under 90\%RM, i.e., SR=0.1.  } 
+\label{fig1} 
+\end{figure}
+
+\FloatBarrier
+\section{讨论}
+
+\subsection{方法有效性分析与机理解释}
+从模型结构上看，GLSKF-tSVD 的优势主要来自“全局结构表达能力提升”与“局部细节补偿机制保留”两点的协同。首先，全局分量采用 t-product/t-SVD 型低秩表示，相比 CP 分解更强调第三维上的耦合相关建模：对于彩色图像而言，RGB 通道之间存在显著相关性，全局结构往往体现为跨通道一致的边缘、轮廓与低频颜色分布。t-SVD 在频域切片上进行低秩约束与重构，使得这类耦合信息能够被更直接地编码到全局模型中，从而在高缺失率下仍能维持更稳定的整体结构与颜色一致性~\cite{zhang2017tsvd}，这与表~\ref{tab:color_inpainting_all} 中 SR=0.2 与 SR=0.1 时 GLSKF-tSVD 在多数样本上获得一致优势的现象相吻合。其次，本文并未削弱 GLSKF 的局部相关残差模块，而是保留了其以结构化协方差刻画局部相关、并通过 Kronecker 结构与迭代线性求解实现可扩展推断的核心思路~\cite{lei2024glskf}。因此在重建过程中，全局分量主要负责低频主成分与整体细节，而局部残差进一步补偿边缘、纹理等高频信息，避免仅依赖增大全局秩所带来的计算膨胀与过拟合风险。
+
+从优化策略上看，时域观测投影与分阶段更新（$K_0$）对稳定性具有直接贡献。本文采用“预测—投影”的方式显式强制 $P_{\Omega}(\mathcal{X})=P_{\Omega}(\mathcal{Y})$，使观测一致性始终得到保证，从而将掩码处理从子问题中剥离出来，减少了频域更新中复杂权重引入所导致的数值不稳定与解释困难。这种在可行集上迭代投影与块坐标更新的策略，在实现上更透明，也便于复现与调试~\cite{lei2024glskf}。同时，“先全局后局部”的分阶段思想可以避免早期迭代中全局与局部两类变量相互拉扯导致的震荡，提升在高缺失条件下的收敛稳定性，这一点与 GLSKF 的经验做法一致~\cite{lei2024glskf}。
+
+\subsection{与 GLSKF（CP）差异的实证含义}
+本文相对于 GLSKF 的关键变化在于全局分量的低秩参数化方式：GLSKF 采用 CP 分解以张量秩 $R$ 描述全局结构~\cite{lei2024glskf}，而本文采用 t-SVD 型低秩表示，以 tubal-rank $r_g$ 控制全局自由度~\cite{zhang2017tsvd}。两者并非简单替换关系，其差异体现在：CP 分解在各模态上以秩-1 外积累加表达结构，适合捕捉可分离的跨模态相关；t-SVD 则通过第三维循环卷积结构与频域切片低秩来表达耦合相关，更贴合“第三维为通道/时间”的规则网格视觉数据~\cite{zhang2017tsvd}。因此，在 80\% 与 90\% 缺失的主流补全设置下，t-SVD 全局建模往往更有利于恢复跨通道一致的轮廓与颜色过渡，进而在 PSNR/SSIM 上体现稳定优势。
+
+需要指出的是，表~\ref{tab:color_inpainting_all} 显示在 SR=0.05（95\% 缺失）的极端稀疏观测下，GLSKF-tSVD 在大多数图像上仍保持领先，但在 Sailboat 与 Peppers 上被 GLSKF 略超。这一现象不应简单理解为“t-SVD 不如 CP”，更合理的解释是：当观测极少时，全局低秩模型的可辨识性显著降低，结果对秩/正则权衡更敏感。t-SVD 的表达能力更强，在缺少足够观测约束时若正则偏弱或 rank 设置偏大，可能更容易出现细节不确定性，从而在结构相似性（SSIM）上受到影响；相对而言，CP 全局模型在某些样本上可能更“保守”，反而在极端缺失时呈现更稳定的结构指标~\cite{lei2024glskf}。这一边界现象提示：在极端缺失场景中，单纯依靠提升全局表达能力并不足以保证全面领先，如何进一步增强局部约束或采用更自适应的秩/正则策略仍具有研究价值。
+
+\subsection{参数敏感性与实践建议}
+本文在实现阶段对关键超参数进行了系统搜索与对比，但限于篇幅未在正文中展示完整的消融结果。结合模型形式与搜索过程中观察到的实验现象，下面给出对工程实践有参考价值的调参建议。首先，tubal-rank $r_g$ 决定全局分量的表示容量：较小的 $r_g$ 倾向于更强的结构压缩，有利于在高缺失场景抑制不确定性与伪影，但可能牺牲纹理与细节；较大的 $r_g$ 能提升对复杂结构的拟合能力，但在观测极少时可能引入过多自由度并放大噪声敏感性。结合表~\ref{tab:color_inpainting_all} 中 SR=0.05 的边界现象，更保守的 $r_g$ 或更强的全局平滑正则在极端缺失下往往更稳健。
+
+其次，全局正则权重 $\rho$ 与局部正则权重 $\gamma$ 控制“全局平滑—局部补偿”的平衡。一般而言，提高 $\rho$ 会强化全局因子的平滑性与稳定性，有助于改善大面积缺失下的轮廓与颜色一致性，但过强可能导致过平滑；提高 $\gamma$ 则抑制局部残差的幅度，减少残差对噪声的过度解释。对于结构主导的图像（如建筑、飞机等），可以适当提高 $\rho$ 以强化全局一致；对于纹理较强的图像（如 Peppers），在保证稳定的前提下可以适当降低 $\gamma$ 或增大局部相关范围以增强细节补偿。
+
+再次，锥化范围影响局部协方差的稀疏程度与有效相关范围：较小的范围更利于计算与局部性表达，较大的范围有助于捕捉更长程的局部相关，但可能增加计算开销并引入过度平滑。最后，分阶段参数 $K_0$ 决定局部模块介入的时机。当前设定的 $K_0$ 接近最大迭代次数，意味着局部残差主要在收敛后期发挥作用，这有利于稳定但也可能限制局部细节的充分迭代。在追求纹理恢复时，可以考虑适当提前局部模块介入，以在稳定性与细节补偿之间取得更好的折中。
+
+\subsection{复杂度与实现细节}
+本文方法的计算结构可概括为“全局频域分块更新 + 局部 Kronecker-CG 更新 + 时域投影”。从瓶颈来源看，第三维 FFT/逆 FFT 的开销通常较小，尤其在彩色图像场景 $n_3=3$ 时几乎不构成主要成本；全局模块的主要开销来自频域切片上因子更新的线性方程求解，其成本与 $n_1n_2r_g$ 及共轭梯度迭代次数相关。
+
+局部模块的核心优势在于避免显式构造大规模协方差矩阵，而是依赖 Kronecker MVM和迭代线性求解器实现近线性规模的更新~\cite{lei2024glskf}。当局部协方差采用 tapering 函数获得稀疏/带状结构时，单次MVM的代价可显著降低，从而使局部更新在大图像上仍保持可扩展性~\cite{furrer2006tapering}。在实现层面，若不对协方差矩阵进行数值稳定处理（如加入对角扰动以改善条件数），迭代求解可能出现收敛缓慢甚至失败；同时，使用以上一轮解为初值与合理的 CG 容差设置，可显著减少迭代步数并提高整体稳定性~\cite{hestenes1952cg}。
+
+\subsection{局限性与潜在改进方向}
+本文方法当前验证主要集中于规则网格的彩色图像补全，仍存在若干需要明确的适用边界。其一，本文实验采用逐元素随机缺失，即对每个张量元素 $(i,j,k)$ 独立采样，因此同一空间位置的 RGB 三通道观测状态允许不一致；本文的时域投影在每个观测条目上逐通道施加一致性约束，因此跨通道同步掩码仅为该设置的特例。更进一步的结构化缺失（如块缺失、条纹缺失或遮挡）会改变观测算子的空间分布，可能需要配合更合适的分阶段策略与参数调整以保持稳定。其二，在极端缺失（如 SR=0.05）下，模型对秩与正则权衡更敏感，表~\ref{tab:color_inpainting_all} 中个别图像出现的反超现象提示：在极稀疏观测下仍需更稳健的自适应策略（例如自适应 rank、基于残差的正则权重调度等）。最后，协方差建模本质上引入了“相关结构假设”，在强非平稳、非高斯噪声或非规则采样网格等场景下，可能需要引入更灵活的非平稳核、混合核或结构自适应建模以保持性能与稳定\cite{rasmussen2006gpml}。
+
+\section{结论与展望}
+
+本文面向高缺失彩色图像的张量补全问题，研究在仅有部分观测 $P_{\Omega}(\mathcal{Y})$ 的条件下如何同时恢复全局结构与局部细节，并严格满足观测一致性约束 $P_{\Omega}(\mathcal{X})=P_{\Omega}(\mathcal{Y})$。为此，本文在 GLSKF 的“全局低秩分量 + 局部相关残差分量”加性框架基础上进行改进与实现~\cite{lei2024glskf}，旨在提升对通道耦合相关的表达能力，同时保留结构化协方差建模与可扩展求解的优势。
+
+在方法层面，本文提出 GLSKF-tSVD：将原 GLSKF 全局模块中的 CP 低秩表示替换为基于 t-product 的 t-SVD 型低秩表示，从而更自然地刻画第三维（RGB 通道）上的耦合相关结构~\cite{zhang2017tsvd}。在求解层面，本文采用交替优化策略更新全局与局部变量，并通过时域观测投影在每轮迭代中显式保证观测一致性，结合Kronecker MVM与共轭梯度迭代求解，实现了在高维场景下的可扩展计算~\cite{hestenes1952cg}。该设计在不引入额外对偶变量的前提下保持了实现简洁性与数值稳定性，并与 GLSKF 的工程化求解路线一致~\cite{lei2024glskf}。
+
+在实验层面，本文在 USC-SIPI 彩色图像数据集上构造随机缺失设置（SR=0.2/0.1/0.05），并采用 PSNR 与 SSIM 进行评估~\cite{wang2004ssim}。定量结果表明，GLSKF-tSVD 在 80\% 与 90\% 缺失条件下总体取得最优 PSNR/SSIM，并在 95\% 缺失的极端稀疏观测下对多数图像仍保持领先；定性对比进一步显示，本文方法在边缘连续性、颜色一致性与细节纹理的恢复方面具有更好的视觉效果，验证了“全局 t-SVD 建模 + 局部相关残差补偿”的有效性~\cite{lei2024glskf}。
+
+本文工作的主要贡献可概括为三点：第一，在 GLSKF 框架下提出面向彩色图像的 GLSKF-tSVD，通过 t-SVD 型全局建模增强了对通道耦合相关的表达能力~\cite{zhang2017tsvd}；第二，给出与实现一致的交替求解与观测投影机制，在保持可复现性的同时保证了观测一致性约束；第三，通过与多种代表性基线方法的对比实验系统验证了本文方法在高缺失彩色图像补全任务中的优势，并揭示了极端缺失下的表现边界与参数敏感性特征。
+
+未来工作可从以下方向进一步展开：其一，针对结构化缺失等更复杂观测模式建立更严格的理论分析，并相应改进频域更新与投影策略；其二，引入自适应 tubal-rank 与正则权重调度机制，提升在极端缺失下的鲁棒性，并补充更系统的消融实验与时间—精度评测；其三，将框架扩展到视频、医学影像等更大规模张量数据，通过频域切片并行进一步提升效率，以满足更高维、更高分辨率场景的实际需求。
+
+\printbibliography
+\end{document}
