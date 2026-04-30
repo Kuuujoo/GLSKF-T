@@ -1,0 +1,1101 @@
+\documentclass[a4paper,12pt]{article}
+%\usepackage[left=1.5cm,right=1.5cm,top=2cm,bottom=2cm]{geometry}
+%\usepackage[margin=1in]{geometry}
+\usepackage{indentfirst}
+\usepackage{latexsym}
+\usepackage{bm}
+\usepackage{color}
+%\usepackage{CJK}
+\usepackage{amsmath}
+\allowdisplaybreaks[4]%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+%\usepackage{ntheorem}
+\usepackage{fancyhdr}
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage{subfigure} 
+\usepackage{colortbl}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{times}
+\usepackage{cite}
+\usepackage{pifont}
+\usepackage{hyperref} 
+\usepackage{enumerate} %%%Use parentheses for the enumerate labels
+\usepackage{wasysym}%%%%%%%%%%%%%%using the up-shape integral symbol%%%%%%%%%%%%%%%%%%%%
+\usepackage{booktabs} %%%the table line
+\usepackage{threeparttable}
+\usepackage{multirow} %%%using \multirow
+\usepackage{makecell} %%% \begin{tabular}{!{\vrule width1.2pt}c!{\vrule %%width1.2pt}c|c!{\vrule width1.2pt}}
+%\usepackage{pdflscape}%%using landscape
+\usepackage{rotating} %%\begin{sidewaystable}\end{sidewaystable}
+\usepackage{mathtools}%%%using \coloneqq
+\usepackage{placeins}%%%using \FloatBarrier
+
+%\begin{sidewaysfigure} 
+%	\centering 
+%	\includegraphics[width=4in]{graphic.eps} 
+%	\caption{Sidewaysfigure Figure} 
+%\end{sidewaysfigure}
+%\usepackage[figuresleft/figuresright]{rotating}
+
+%\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+
+
+\renewcommand{\headwidth}{16cm}
+\renewcommand{\baselinestretch}{1.1}
+%\renewcommand{\thesection}{\S\arabic{section}}
+\renewcommand{\thesection}{\arabic{section}}
+%\renewcommand{\theequation}{\thesection.\arabic{equation}}
+\numberwithin{equation}{section}
+\numberwithin{algorithm}{section}
+
+\newcommand{\e}{\ensuremath{\varepsilon}}
+\newcommand{\DF}[2]{{\displaystyle\frac{#1}{#2}}}
+\newcommand{\me}{\mathrm{e}}
+\newcommand{\mi}{\mathrm{i}}
+\newcommand{\dif}{\mathrm{d}}
+\newcommand{\grad}{\mathrm{grad}}
+\newcommand{\hess}{\mathrm{Hess}}
+\newcommand{\vect}{\mathrm{vec}}
+\newcommand{\proj}{\mathrm{Proj}}
+\newcommand{\Dif}{\mathrm{D}}
+\newcommand{\T}{\mathrm{T}}
+\newcommand{\N}{\mathrm{N}}
+\newcommand{\R}{\mathrm{R}}
+\newcommand{\St}{\mathrm{St}}
+\newcommand{\suchthat}{\mathrm{s.\;t.\quad}}
+\newcommand{\skewsym}{\mathrm{skew}}
+\newcommand{\sym}{\mathrm{sym}}
+\newcommand{\diag}{\mathrm{diag}}
+
+\newcommand{\mymathcal}[1]{\boldsymbol{\mathcal{#1}}}
+\newcommand{\argmin}{\mathop{\mathrm{argmin}}}
+
+\newcommand{\chuhao}{\fontsize{42pt}{\baselineskip}\selectfont}
+\newcommand{\xiaochuhao}{\fontsize{36pt}{\baselineskip}\selectfont}
+\newcommand{\yihao}{\fontsize{28pt}{\baselineskip}\selectfont}
+\newcommand{\erhao}{\fontsize{21pt}{\baselineskip}\selectfont}
+\newcommand{\xiaoerhao}{\fontsize{18pt}{\baselineskip}\selectfont}
+\newcommand{\sanhao}{\fontsize{15.75pt}{\baselineskip}\selectfont}
+\newcommand{\sihao}{\fontsize{14pt}{\baselineskip}\selectfont}
+\newcommand{\xiaosihao}{\fontsize{12pt}{14pt}\selectfont}
+\newcommand{\wuhao}{\fontsize{10.5pt}{12.6pt}\selectfont}
+\newcommand{\liuhao}{\fontsize{9pt}{10}\selectfont}
+
+
+
+\newtheorem{lemma}{Lemma}[section]
+%\newtheorem{theorem}[lemma]{Theorem}
+\newtheorem{theorem}{Theorem}[section]
+%\newtheorem{algorithm}{Algorithm}[section]
+\newtheorem*{algorithmnonum}{Algorithm}
+\newtheorem{corollary}{Corollary}[section]
+\newtheorem{definition}{Definition}[section]
+\newtheorem{proposition}{Proposition}[section]
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}[section]
+\newtheorem{example}{Example}[section]
+\theoremstyle{definition}
+\newtheorem{problem}{Problem}
+
+
+%\usepackage[numbers]{natbib}     %%%%%%%%%%%%%%not using the square brackets of bibliography_1%%%%%%%%%%%%%%%%%%%%
+%\setcitestyle{open={},close={}}  %%%%%%%%%%%%%%not using the square brackets of bibliography_2%%%%%%%%%%%%%%%%%%%%
+
+\setlength{\textheight}{9in} 
+\setlength{\textwidth}{6.5in}
+\setlength{\topmargin}{-36pt} 
+\setlength{\oddsidemargin}{0pt}
+\setlength{\evensidemargin}{0pt} 
+\tolerance=500
+
+
+\begin{document}
+\title{GLSKF-tSVD Tensor Completion Method for Color Images with High Missing Rates}
+\author{Ruochen Shi $^{\mathrm{a}}$\,, Xiangjian Xu $^{\mathrm{a,}}$\thanks{\liuhao Corresponding author.   \newline
+		\hspace*{17pt}\emph{E-mail addresses:} xiangjianxu@126.com(X. Xu).} \,, Weihua Zhao $^{\mathrm{a}}$\, and  Qiaohua Liu $^{\mathrm{b}}$\\
+$^{\mathrm{a}}${\it\liuhao School of Mathematics and Statistics, Nantong University, Jiangsu 226019, PR China}\\
+$^{\mathrm{b}}${\it\liuhao Department of Mathematics, Shanghai University, Shanghai 200444, PR China}	
+}
+\date{}
+\maketitle
+\begin{quote}
+{\bf Abstract.~~} 
+Visual data such as color images can naturally be represented as third-order tensors. However, under scenarios with high missing rates, simultaneously recovering global structural consistency while preserving local texture details remains challenging. To address this, an additive framework of global low-rank representation plus local residual correlation modeling is presented. The global module is extended from the  t-product based  t-SVD low-rank representation to more thoroughly capture the coupling correlations along the third dimension. Meanwhile, the local residual is regularized with a kernelized generalized least squares correlation prior.  
+An alternating direction optimization strategy is adopted, where the global subproblem is decomposed into regularized least squares problems on frequency-domain slices via FFT along the third dimension, solved using Kronecker matrix-vector multiplication (Kronecker MVM) combined with the conjugate gradient method. The local subproblem constructs a linear equation system on the observation subspace and is efficiently solved via conjugate gradient as well.  
+Numerical results demonstrate that the proposed method achieves performance comparable to existing approaches, while exhibiting superior color consistency and structural fidelity in visual quality.
+
+{\bf Keywords:~~} Tensor completion;  t-SVD; Generalized least squares; Covariance norm; Conjugate gradient method; Color image inpainting
+
+{\bf AMS subject classifications: } 15A18; 15A69; 65F10
+\end{quote}
+%\begin{abstract}
+%\end{abstract}
+
+%================================================================introduction=====================================================================%
+%================================================================introduction=====================================================================%
+%================================================================introduction=====================================================================%
+\setcounter{equation}{0}
+\section{Introduction}
+
+Color images, videos, and other visual data naturally exhibit multi-dimensional coupling between spatial dimensions and channel/time dimensions. Representing them as high-order tensors allows this correlation to be characterized within a unified data structure. Therefore, tensor completion has become one of the important technical approaches for handling such multi-dimensional missing data \cite{liu2013tensor}. In scenarios such as remote sensing imaging, medical imaging, and video surveillance, observational data often suffer from large proportions of missing entries due to sensor defects, occlusions, transmission packet loss, or limited sampling budgets \cite{bengua2017tt, li2017tv}. For visual tensor completion under high missing rates, the restored results need not only to preserve the overall structure (such as contours and geometric layout) but also to retain local details as much as possible (such as textures and edges), while avoiding color drift and edge misalignment caused by misaligned structures across channels \cite{zhao2021complementary}.
+
+
+
+
+
+
+The key to tensor completion lies in exploiting the structural correlation between observed and missing data. Inspired by matrix completion theory, low-rank modeling is widely used to recover the global structure from incomplete observations \cite{candes2009matrix}. In the tensor case, classical decompositions (such as CP/Tucker) provide interpretable low-rank representations for multi-dimensional data \cite{kolda2009tensor} and have promoted the development of scalable solution frameworks for incomplete observations \cite{acar2011scalable}. However, visual data often exhibit significant correlations simultaneously in spatial neighborhoods and along the third dimension, such as RGB channels or time frames. Relying solely on the global low-rank assumption can usually stabilize the low-frequency structure but tends to cause over-smoothing in textures and sharp edges. Attempting to capture local high-frequency variations by increasing the rank may introduce significant computational costs and instability.
+To balance global consistency and local variations, Lei and Sun proposed the Generalized Least Squares Kernelized Tensor Factorization (GLSKF) framework \cite{lei2024glskf}. This framework characterizes the data using an additive form of a ``global low-rank component'' and a ``locally correlated residual component'': the global component is responsible for capturing the overall structure, while the local component describes local correlations through structured covariance. Scalable solutions are achieved via generalized least squares and kernelized covariance design. To enhance efficiency in large-scale scenarios, the framework leverages Kronecker structures to accelerate matrix-vector multiplications \cite{allen2014glsmd} and employs strategies such as kernel functions or tapering functions to control the computational cost of covariance \cite{gneiting2002compact, furrer2006tapering}. In iterative solutions, it is combined with the conjugate gradient method to achieve near-linear computational complexity \cite{hestenes1952cg}. However, when the global module of GLSKF adopts CP decomposition for low-rank modeling, its representational efficiency may be affected if there is strong coupling correlation along the third dimension (e.g., color channels or time frames), thereby limiting the global component's ability to characterize cross-channel or cross-frame structures.
+
+
+
+
+
+
+Within the global-local additive framework of GLSKF, this paper utilizes a tensor decomposition based on the t-product to characterize the global structure. The core idea of the t-product is to transform operations on third-order tensors into a set of matrix operations through frequency-domain transformation, enabling correlations along the third dimension to be leveraged more directly \cite{kilmer2011factorization, kilmer2013operators}. The corresponding t-SVD provides a clear and computable tool for tensor low-rank modeling and has been applied to tensor completion tasks \cite{zhang2017tsvd}. Based on this concept, this paper parameterizes the global component as a t-SVD type low-rank structure to fully capture global correlations. Meanwhile, it retains GLSKF's local covariance residual modeling and scalable solution mechanisms. During the optimization process, observed positions are consistently fixed to their observed values via consensus projection, thereby enhancing stability under high missing rates \cite{boyd2011admm}.
+The main contributions of this paper are summarized as follows:
+%\begin{enumerate}%[(1)]
+	\begin{list}{$\bullet$}
+		{\setlength{\parsep}{\parskip}
+		\setlength{\itemsep}{0ex plus 0.1ex}
+		\setlength{\topsep}{0pt}
+	    }
+	\item Within the additive framework of GLSKF, the global low-rank module utilizes  t-SVD based on the  t-product for low-rank representation, forming a unified global  t-SVD low-rank decomposition plus locally correlated residual modeling approach to more fully leverage coupling information along the third dimension.
+	\item In the solution process for updating the global component, an alternating optimization update strategy matching the proposed model is presented. After each iteration, the consensus projection is applied to the reconstructed result to strictly satisfy the constraint $P_{\Omega}(\mathcal{X})=P_{\Omega}(\mathcal{Y})$, thereby mitigating the instability caused by positional shifts under high missing rates.
+	\item Comparative experiments and ablation analysis are conducted on benchmark color image tensor completion datasets to validate the effectiveness of the proposed method in handling high missing rates and recovering details.
+\end{list}
+%\end{enumerate}
+
+The remainder of this paper is organized as follows: Section 2 reviews tensor completion, low-rank decomposition, and local prior methods related to this work. Section 3 provides the notation conventions and preliminaries including the covariance norm and  t-SVD. Section 4 details the proposed model and optimization algorithm. Section 5 presents the experimental setup and result analysis. Section 6 discusses complexity, scalability, and the role of key components. Section 7 concludes the paper and outlines future work.
+
+
+
+
+
+
+\section{Related work}
+
+\subsection{Tensor completion and classical low-rank representations}
+The core of missing data completion lies in recovering the missing parts using the intrinsic correlation structure of the data, given only partial observations. For data with inherent multi-dimensional coupling, such as color images and videos, representing them as higher-order tensors can simultaneously preserve the correlations between spatial dimensions and channel or time dimensions. Therefore, tensor completion has become a common modeling approach for addressing such problems \cite{liu2013tensor, panagakis2021tensorcvdl}. Inspired by research on matrix completion, the low-rank assumption has been widely adopted as a prerequisite for recovering the global structure from incomplete observations \cite{candes2009matrix}. In the tensor case, CP and Tucker decompositions are the two most classic types of low-rank representations. They characterize the global low-dimensional structure through a sum of outer products and the mode-wise products of a core tensor with factor matrices, respectively \cite{kolda2009tensor}.
+
+To enhance representation efficiency and parameter controllability in high-order or large-scale problems, structured decompositions (e.g., tensor trains and tensor rings) have also been introduced into completion tasks, alleviating to some extent the challenges of rank selection and storage overhead \cite{oseledets2011tt,bengua2017tt}. Relevant methods are continuously being developed in more complex multidimensional scenarios, such as applying structured decompositions to spatiotemporal data and engineering-level implementations, to balance accuracy and scalability \cite{yuan2019tensor,chen2025geotensor}.
+
+
+
+
+
+\subsection{Complementary Modeling of Global Structure and Local Priors}
+
+Models that rely solely on global low-rank assumptions often suffer from over-smoothing. While they generally recover large-scale structures well, they tend to weaken textures, edges, and local non-stationary variations. Consequently, the joint modeling of global low-rank structures and local priors naturally emerges as a more effective approach. Typical examples include Smooth PARAFAC\cite{yokota2016smooth}, which imposes smoothness constraints on CP decomposition factors, and the use of total variation regularization to suppress artifacts and enhance edge consistency\cite{rudin1992rof,li2017tv}. Furthermore, some studies emphasize the complementary relationship among global structure, local smoothness, and non-local self-similarity, attempting to improve the recovery quality of both structure and details within a unified framework\cite{zhao2021complementary,yuan2019tensor}.
+
+
+
+
+
+\subsection{Tensor completion and  t-SVD decomposition}
+For third-order tensors, the  t-product operation provides a well-defined algebraic structure within the corresponding space. Leveraging the Fast Fourier Transform, it enables many operations to be converted into matrix subproblems in a more direct manner \cite{kilmer2011factorization,kilmer2013operators}. Building upon this,  t-SVD offers a corresponding low-rank representation and a computable decomposition form, which has been utilized to construct exact tensor completion models and algorithms \cite{zhang2017tsvd}. Since data such as color images or videos often exhibit significant correlations across their dimensions when represented as tensors, researchers in related fields commonly adopt  t-SVD based models as one of the essential tools for completion and recovery \cite{panagakis2021tensorcvdl}.
+
+
+
+
+
+
+\subsubsection{Optimization strategies and observation consistency handling}
+In classical decomposition models such as CP and Tucker, Alternating Least Squares (ALS) is one of the most common solution strategies: it breaks down the overall non-convex problem into a series of conditional least squares subproblems, iteratively updating the factor matrices or the core tensor \cite{kolda2009tensor}. When non-smooth regularization (e.g., nuclear norm, sparsity terms) is introduced or when constraints (such as observation consistency) need to be explicitly handled, the Alternating Direction Method of Multipliers (ADMM) is widely adopted due to its structure of separating intractable terms and updating them alternately \cite{boyd2011admm}. In many works on  tensor completion, observation consistency is often achieved through explicit constraints or projection steps, preventing deviations at observed locations during iterations \cite{zhang2017tsvd}. 
+The subsequent solution process in this paper also handles observation consistency using an explicit constraint approach, embedding consistency projection into alternating updates to enhance stability under high missing rates.
+
+
+
+
+
+
+\subsubsection{GLSKF and scalable solving of structured covariance}
+
+The GLSKF framework proposed by Lei and Sun adopts an additive model comprising a global low-rank component and a locally correlated residual component: the global component captures the overall structure, while the local component describes short-scale variations and local correlations using a covariance structure, thereby covering both low-frequency and high-frequency components within a unified framework \cite{lei2024glskf}. At the computational level, to avoid explicitly constructing large covariance matrices, related work typically leverages Kronecker structures to organize key computations in the form of covariance matrix-vector multiplications (MVM), transforming the main bottleneck into manageable operator multiplications \cite{allen2014glsmd}. In solving linear subproblems, iterative methods such as the conjugate gradient method are often employed to achieve scalable computation without explicitly forming inverses \cite{hestenes1952cg}.
+
+
+
+In covariance or kernel-based modeling, a common practice is to use kernel functions to characterize how similarity varies with distance or direction, and to obtain a covariance matrix at discrete sampling points \cite{rasmussen2006gpml}. As data scale increases, dense kernel matrices impose significant storage and computational burdens, leading to the development of various methods for large-scale kernel matrix computation and inference. For instance, structured kernels or fast operators are employed to accelerate matrix operations \cite{wilson2015scalablegp}, and hierarchical or localized ideas are utilized to construct approximate covariances and inference procedures \cite{katzfuss2013bayesian,sang2012fullscale}. Furthermore, Gaussian Markov Random Fields (GMRF), which employ sparse precision matrices, represent a classic approach to achieving sparsity and improving inference efficiency \cite{rue2005gmrf}.
+
+
+
+Complementary to the above ideas is the use of tapering functions. By truncating correlations beyond a certain distance, the kernel matrix exhibits a sparse or banded structure, thereby significantly reducing computational costs \cite{gneiting2002compact,furrer2006tapering}. The trade-off between statistical efficiency and numerical efficiency, as well as its practical implementation, have been systematically analyzed in the spatial statistics literature \cite{kaufman2008tapering}. These techniques of structured covariance and scalable solving provide a feasible computational pathway for the framework combining global structure and locally correlated residuals, and also constitute the direct background for this paper, which aims to reformulate global low-rank modeling while retaining the advantages of local components \cite{lei2024glskf}.
+
+
+
+
+
+\section{Preliminaries}
+
+\subsection{Notation and Observation Projection}
+In this paper, calligraphic uppercase letters denote third-order tensors, e.g., $\mathcal{X}\in\mathbb{R}^{n_1\times n_2\times n_3}$. Uppercase letters denote matrices, e.g., $X\in\mathbb{R}^{m\times n}$, and lowercase letters denote vectors, e.g., $x\in\mathbb{R}^{n}$. A tensor element is denoted as $\mathcal{X}(i,j,k)$. For a third-order tensor $\mathcal{X}$, its $k$-th frontal slice is denoted as
+\[
+\mathcal{X}^{(k)}=\mathcal{X}(:,:,k),\quad k=1,\ldots,n_3.
+\]
+Furthermore, a one-dimensional sub-block along any mode is called a fiber, and $\mathcal{X}(i,j,:)$ is referred to as a tube.
+
+Let $\Omega\subseteq [n_1]\times[n_2]\times[n_3]$ be the set of observed indices. The observation projection operator $P_{\Omega}(\cdot)$ acting on a tensor $\mathcal{X}$ is defined as
+\[
+\big[P_{\Omega}(\mathcal{X})\big](i,j,k)=
+\begin{cases}
+	\mathcal{X}(i,j,k), & (i,j,k)\in\Omega,\\
+	0, & \text{otherwise},
+\end{cases}
+\]
+and the projection onto its complement is denoted as $P_{\Omega^c}(\mathcal{X})=\mathcal{X}-P_{\Omega}(\mathcal{X})$. In tensor completion problems, $P_{\Omega}$ is used to construct the data fidelity term only at the observed locations in the objective function.
+
+To facilitate subsequent derivations, we use the vectorization operator $\mathrm{vec}(\cdot)$ to stack a tensor or matrix into a vector in mode-$1$ order. For $A\in\mathbb{R}^{m\times n}$ and $B\in\mathbb{R}^{p\times q}$, their Kronecker product is denoted as $A\otimes B\in\mathbb{R}^{mp\times nq}$.
+
+
+
+
+
+
+\subsection{Covariance Norm and Generalized Least Squares}
+To simultaneously characterize the correlation structures across different dimensions, GLSKF formulates the regularization term as a covariance norm \cite{lei2024glskf}. Suppose symmetric positive definite covariance matrices are given for the three dimensions:
+$K_1\in\mathbb{R}^{n_1\times n_1}$, $K_2\in\mathbb{R}^{n_2\times n_2}$, $K_3\in\mathbb{R}^{n_3\times n_3}$,
+where $K_1, K_2$ typically correspond to the correlation structures in the two spatial dimensions, and $K_3$ corresponds to the correlation structure in the third dimension (e.g., color channels or time frames).
+For any $\mathcal{X}\in\mathbb{R}^{n_1\times n_2\times n_3}$, the covariance norm is defined as
+\begin{equation*}
+	\|\mathcal{X}\|_{K_1,K_2,K_3}
+	=\sqrt{ \mathrm{vec}(\mathcal{X})^{\top}\big(K_3^{-1}\otimes K_2^{-1}\otimes K_1^{-1}\big)\mathrm{vec}(\mathcal{X})}.
+\end{equation*}
+When $K_1=I_{n_1}$, $K_2=I_{n_2}$, $K_3=I_{n_3}$, this reduces to the Frobenius norm $\|\mathcal{X}\|_F$.
+This norm corresponds to the weighted residual form in Generalized Least Squares (GLS): it weights the variations across different positions or dimensions via the covariance (or its inverse), thereby incorporating the correlation structure into the optimization objective \cite{allen2014glsmd}.
+
+
+
+In large-scale problems, directly constructing or factorizing the aforementioned Kronecker-weighted matrix is often computationally prohibitive. Therefore, practical solutions rely on matrix-vector multiplications (MVM) and the conjugate gradient method \cite{hestenes1952cg}, which is also a key factor in the scalable implementation of GLSKF \cite{lei2024glskf}.
+
+
+
+
+
+
+\subsection{ t-product and  t-SVD}
+The  t-product provides a well-defined algebraic structure for the space of third-order tensors \cite{kilmer2011factorization, kilmer2013operators}.
+For third-order tensors $\mathcal{A}\in\mathbb{R}^{n_1\times n_2\times n_3}$ and $\mathcal{B}\in\mathbb{R}^{n_2\times n_4\times n_3}$,
+the  t-product is denoted as $\mathcal{C}=\mathcal{A}*\mathcal{B}\in\mathbb{R}^{n_1\times n_4\times n_3}$.
+Its computation can be implemented via the discrete Fourier transform along the third dimension: let $\bar{\mathcal{A}}=\mathrm{fft}(\mathcal{A},[],3)$,
+$\bar{\mathcal{B}}=\mathrm{fft}(\mathcal{B},[],3)$, then in the frequency domain, for each frontal slice,
+\[
+\bar{\mathcal{C}}^{(k)}=\bar{\mathcal{A}}^{(k)}\,\bar{\mathcal{B}}^{(k)},\quad k=1,\ldots,n_3,
+\label{eq:tprod_fft}
+\]
+and finally return to the time domain via $\mathcal{C}=\mathrm{ifft}(\bar{\mathcal{C}},[],3)$. Thus, the  t-product transforms the circular convolution coupling along the third dimension into slice-wise matrix multiplications in the frequency domain, explicitly preserving the coupling structure along the third dimension during computation \cite{kilmer2013operators}.
+
+
+
+
+Under the  t-product algebra, the  t-SVD provides a decomposition analogous to the matrix SVD \cite{kilmer2011factorization, zhang2017tsvd}.
+For any third-order tensor $\mathcal{M}\in\mathbb{R}^{n_1\times n_2\times n_3}$, there exists
+\[
+\mathcal{M}=\mathcal{U}*\mathcal{S}*\mathcal{V}^{\top},
+\label{eq:tsvd}
+\]
+where $\mathcal{U}\in\mathbb{R}^{n_1\times n_1\times n_3}$ and $\mathcal{V}\in\mathbb{R}^{n_2\times n_2\times n_3}$ are  t-orthogonal tensors,
+and $\mathcal{S}\in\mathbb{R}^{n_1\times n_2\times n_3}$ is an $f$-diagonal tensor, i.e., each of its frontal slices in the frequency domain is a diagonal matrix.
+Its computation typically follows this procedure: first, apply an FFT along the third dimension to obtain the tensor in the frequency domain; then, perform a matrix SVD on each frequency slice; finally, apply an inverse FFT along the third dimension to return to the time domain \cite{kilmer2013operators, zhang2017tsvd}.
+
+
+
+
+In practical modeling, a truncated t-SVD is often adopted, where only the first \( r \) singular tubes are retained to approximate \( \mathcal{M} \), achieving a balance between representational capacity and computational complexity \cite{zhang2017tsvd}.  
+Additionally, when the original tensor is real-valued, its frequency domain representation satisfies a conjugate symmetry property. Therefore, in practical tensor computations, only half of the frequency domain slices need to be computed, while the remaining slices can be obtained by applying conjugate symmetry property. This not only ensures that the result after the inverse FFT remains real-valued but also significantly reduces the computational cost of frequency domain slices \cite{kilmer2013operators}.
+
+
+
+
+
+\section{GLSKF-tSVD Tensor Completion Method}
+\subsection{Optimization Problem}
+Let the observed tensor be $\mathcal{Y}\in\mathbb{R}^{n_1\times n_2\times n_3}$, with $\Omega$ denoting the observation index set and $P_{\Omega}(\cdot)$ representing the projection operator. In this paper, the tensor to be inpainted is represented as a global-plus-local component model:
+\begin{equation}
+	\mathcal{X}=\mathcal{M}+\mathcal{R},\qquad P_{\Omega}(\mathcal{X})=P_{\Omega}(\mathcal{Y}).
+	\label{eq:add_model}
+\end{equation}
+Here, $\mathcal{M}$ characterizes the global structure, while $\mathcal{R}$ compensates for local variations such as textures and edges. To preserve multi-channel information and spatial structure as completely as possible, we parameterize $\mathcal{M}$ using a low-rank structure based on  t-SVD:
+\begin{equation}
+	\mathcal{M}=\mathcal{U}*\mathcal{S}*\mathcal{V}^{\top},\qquad \mathrm{rank}_t(\mathcal{M})\le r_g,
+	\label{eq:global_tsvd}
+\end{equation}
+where $*$ denotes the  t-product, $\mathcal{U}\in\mathbb{R}^{n_1\times r_g\times n_3}$ and $\mathcal{V}\in\mathbb{R}^{n_2\times r_g\times n_3}$ are factor tensors, $\mathcal{S}\in\mathbb{R}^{r_g\times r_g\times n_3}$ is an $f$-diagonal tensor, and $r_g$ controls the tubal-rank of the global component\cite{kilmer2011factorization,zhang2017tsvd}.
+
+For the local component $\mathcal{R}$, a covariance-weighted quadratic form is employed to characterize its correlation structure. Meanwhile, a separable (Kronecker) form
+$K_r = K_{r,3}\otimes K_{r,2}\otimes K_{r,1}$ is adopted,
+enabling scalable solutions via MVM (Matrix-Vector Multiplication) in subsequent iterations\cite{lei2024glskf,allen2014glsmd}.
+
+Regarding the regularization design, this paper adopts the covariance-weighted quadratic formulation from GLSKF: correlation constraints are imposed on the global factors along the spatial and third dimensions, while structured covariance constraints are applied to the local residuals. This leads to the following optimization problem:
+\begin{equation}
+	\min_{\mathcal{U},\mathcal{S},\mathcal{V},\mathcal{R}}
+	\frac{1}{2}\Big\|P_{\Omega}\big(\mathcal{Y}-\mathcal{U}*\mathcal{S}*\mathcal{V}^{\top}-\mathcal{R}\big)\Big\|_{F}^{2}
+	+\frac{\rho}{2}\Big(\|\mathcal{U}\|^{2}_{K_1,I_{r_g},K_3}+\|\mathcal{V}\|^{2}_{K_2,I_{r_g},K_3}\Big)
+	+\frac{\gamma}{2}\|\mathcal{R}\|^{2}_{K_r}.
+	\label{eq:overall_obj}
+\end{equation}
+Here, $\rho>0$ and $\gamma>0$ control the regularization strength for the global factors and local residuals, respectively. $K_1$, $K_2$, and $K_3$ are symmetric positive definite covariance matrices.
+
+The explicit inclusion of the projection operator $P_{\Omega}(\cdot)$ in problem \eqref{eq:overall_obj} is computationally inconvenient. To handle the observation constraint uniformly, this paper adopts a predict-then-project approach: given current $\mathcal{M}^t,\mathcal{R}^t$, a prediction is first constructed as
+\begin{equation}
+	\mathcal{X}_{\mathrm{pred}}^{t}=\mathcal{M}^{t}+\mathcal{R}^{t},
+	\label{eq:xpred}
+\end{equation}
+which is then projected back onto the observation set via
+\begin{equation}
+	\mathcal{X}^{t}=P_{\Omega}(\mathcal{Y})+P_{\Omega^{c}}\big(\mathcal{X}_{\mathrm{pred}}^{t}\big).
+	\label{eq:proj}
+\end{equation}
+In this way, observation consistency only needs to be enforced once during the projection step, and subsequent updates for both the global and local components take the projected complete tensor $\mathcal{X}^{t}$ as input. This approach of first solving a mask-free subproblem and then applying the projection operator is also common in ADMM-type frameworks\cite{boyd2011admm}. Furthermore, to mitigate initial oscillations, a two-stage strategy is adopted in implementation: only the global component is updated during the first $K_0$ iterations, followed by alternating updates of $\mathcal{M}$ and $\mathcal{R}$.
+
+\subsection{Model Solution}
+\label{sec:solution}
+
+\subsubsection{Updating Global Factors}
+In the $t$-th iteration, $\mathcal{R}^t$ is fixed and $\mathcal{X}^t$ is obtained via consistency projection. Let
+\[
+\mathcal{G}^t=\mathcal{X}^t-\mathcal{R}^t,
+\]
+then updating the global component is equivalent to fitting $\mathcal{G}^t$ without mask:
+\begin{equation}
+	\min_{\mathcal{U},\mathcal{S},\mathcal{V}}
+	\frac12\big\|\mathcal{G}^t-\mathcal{U}*\mathcal{S}*\mathcal{V}^{\top}\big\|_F^2
+	+\frac{\rho}{2}\Big(\|\mathcal{U}\|^{2}_{K_1,I_{r_g},K_3}+\|\mathcal{V}\|^{2}_{K_2,I_{r_g},K_3}\Big).
+	\label{eq:global_subprob_new}
+\end{equation}
+Applying FFT along the third dimension, denote $\bar{\mathcal{G}}=\mathrm{fft}(\mathcal{G}^t,[],3)$, and the corresponding frequency-domain factors are denoted as $\bar{\mathcal{U}},\bar{\mathcal{S}},\bar{\mathcal{V}}$, respectively.
+In the frequency domain, the  t-product reduces to standard matrix multiplication for each slice, thus \eqref{eq:global_subprob_new} can be expressed as a sum over all frequency slices:
+\begin{equation}
+	\min_{\{\bar U^{(k)},\bar S^{(k)},\bar V^{(k)}\}}
+	\sum_{k=1}^{n_3}\frac12\big\|\bar G^{(k)}-\bar U^{(k)}\bar S^{(k)}\bar V^{(k)H}\big\|_F^2
+	+\frac{\rho}{2}\sum_{k=1}^{n_3}\Big(\mathrm{tr}(\bar U^{(k)H}K_1^{-1}\bar U^{(k)})+\mathrm{tr}(\bar V^{(k)H}K_2^{-1}\bar V^{(k)})\Big),
+	\label{eq:global_freq_sum}
+\end{equation}
+where $(\cdot)^H$ denotes conjugate transpose. The iterative update formulas for $\bar U^{(k)}$, $\bar V^{(k)}$, and $\bar S^{(k)}$ on the $k$-th frequency slice are given below:
+
+
+\noindent\textbf{Update $\bar U^{(k)}$.}
+Let
+\(
+B^{(k)}=\bar V^{(k)}\bar S^{(k)H}\in\mathbb{C}^{n_2\times r_g},
+\)
+then the subproblem for $\bar U^{(k)}$ is
+\[
+\min_{\bar U^{(k)}}\
+\frac{1}{2}\big\|\bar G^{(k)}-\bar U^{(k)}B^{(k)H}\big\|_F^2
++\frac{\rho}{2}\mathrm{tr}\!\big(\bar U^{(k)H}K_1^{-1}\bar U^{(k)}\big).
+\]
+Taking the derivative with respect to $\bar U^{(k)}$ and setting it to zero yields the normal equation
+\begin{equation}
+	\bar U^{(k)}\big(B^{(k)H}B^{(k)}\big)+\rho\,K_1^{-1}\bar U^{(k)}=\bar G^{(k)}B^{(k)}.
+	\label{eq:U_normal_new}
+\end{equation}
+Vectorizing \eqref{eq:U_normal_new} and using $\mathrm{vec}(AXB)=(B^{\top}\otimes A)\mathrm{vec}(X)$, we obtain a linear system for $\mathrm{vec}(\bar U^{(k)})$:
+\begin{equation}
+	\Big(\big(B^{(k)H}B^{(k)}\big)^{\top}\otimes I_{n_1}+\rho\,I_{r_g}\otimes K_1^{-1}\Big)\,
+	\mathrm{vec}\!\big(\bar U^{(k)}\big)
+	=
+	\mathrm{vec}\!\big(\bar G^{(k)}B^{(k)}\big).
+	\label{eq:U_vec_system}
+\end{equation}
+Thus we have
+\begin{equation}
+	\mathrm{vec}\!\big(\bar U^{(k)}\big)
+	=\Big(\big(B^{(k)H}B^{(k)}\big)^{\top}\otimes I_{n_1}+\rho\,I_{r_g}\otimes K_1^{-1}\Big)^{-1}
+	\mathrm{vec}\!\big(\bar G^{(k)}B^{(k)}\big).
+\end{equation}
+
+\noindent\textbf{Update $\bar V^{(k)}$.}
+Fixing $\bar S^{(k)}$ and $\bar U^{(k)}$, let
+\(
+C^{(k)}=\bar U^{(k)}\bar S^{(k)}\in\mathbb{C}^{n_1\times r_g},
+\)
+then the subproblem for $\bar V^{(k)}$ is
+\[
+\min_{\bar V^{(k)}}\
+\frac{1}{2}\big\|\bar G^{(k)}-\;C^{(k)}\bar V^{(k)H}\big\|_F^2
++\frac{\rho}{2}\mathrm{tr}\!\big(\bar V^{(k)H}K_2^{-1}\bar V^{(k)}\big),
+\]
+with the normal equation
+\begin{equation}
+	\bar V^{(k)}\big(C^{(k)H}C^{(k)}\big)+\rho\,K_2^{-1}\bar V^{(k)}
+	=\bar G^{(k)H}C^{(k)}.
+	\label{eq:V_normal}
+\end{equation}
+Vectorization yields
+\begin{equation}
+	\Big(\big(C^{(k)H}C^{(k)}\big)^{\top}\otimes I_{n_2}+\rho\,I_{r_g}\otimes K_2^{-1}\Big)\,
+	\mathrm{vec}\!\big(\bar V^{(k)}\big)
+	=
+	\mathrm{vec}\!\big(\bar G^{(k)H}C^{(k)}\big).
+	\label{eq:V_vec_system}
+\end{equation}
+Hence
+\begin{equation}\mathrm{vec}\!\big(\bar V^{(k)}\big)
+	=\Big(\big(C^{(k)H}C^{(k)}\big)^{\top}\otimes I_{n_2}+\rho\,I_{r_g}\otimes K_2^{-1}\Big)^{-1}
+	\mathrm{vec}\!\big(\bar G^{(k)H}C^{(k)}\big).
+\end{equation}
+
+\noindent\textbf{Update $\bar S^{(k)}$.}
+Fixing $\bar U^{(k)}$ and $\bar V^{(k)}$, the diagonal matrix $\bar S^{(k)}$ can be updated elementwise along its diagonal. Let $\bar s^{(k)}=\mathrm{diag}(\bar S^{(k)})$, then
+\begin{equation}
+	\bar s^{(k)} = \arg\min_{s\in\mathbb{C}^{r_g}}
+	\frac12\big\|\mathrm{vec}(\bar G^{(k)}) - (\overline{\bar V^{(k)}}\odot \bar U^{(k)})\,s\big\|_2^2,
+	\label{eq:S_update_diag}
+\end{equation}
+where $\odot$ denotes the Khatri--Rao product. After updating all frequency slices, apply the inverse FFT to $\bar{\mathcal{U}},\bar{\mathcal{S}},\bar{\mathcal{V}}$ to obtain the factors in the time domain, and update the global component as
+\begin{equation}
+	\mathcal{M}^{t+1}=\mathcal{U}^{t+1}*\mathcal{S}^{t+1}*(\mathcal{V}^{t+1})^{\top}.
+	\label{eq:M_update_new}
+\end{equation}
+
+
+
+To solve \eqref{eq:U_vec_system} and \eqref{eq:V_vec_system}, this paper employs the CG (Conjugate Gradient) method to iteratively solve the linear systems. In implementation, the Kronecker coefficient matrix is not explicitly formed. Instead, the vectors are reshaped back to matrices and the linear equations are computed using  
+$(A^{\top}\!\otimes I)\mathrm{vec}(X)=\mathrm{vec}(XA)$ and $(I\otimes B)\mathrm{vec}(X)=\mathrm{vec}(BX)$, thereby avoiding the construction of large matrices of size $(n_1 r_g)\times(n_1 r_g)$ or $(n_2 r_g)\times(n_2 r_g)$.
+
+Furthermore, the frequency-domain factors satisfy conjugate symmetry, so only slices for $k=1,\dots,\lceil(n_3+1)/2\rceil$ need to be computed. The remaining slices are filled by conjugate symmetry to ensure real-valued results after the inverse FFT.
+The entire procedure of global factor updating is shown in Algorithm~\ref{alg:update_global}.
+
+
+\begin{algorithm}[!htbp]
+	\caption{Updating Global Factors}
+	\label{alg:update_global}
+	\begin{algorithmic}[1]
+		\REQUIRE		
+		Current complete tensor $\mathcal{X}^{t}$, local component $\mathcal{R}^{t}$, tubal-rank $r_g$, weight $\rho$, kernel matrix operators $K_1^{-1},K_2^{-1}$,
+		CG maximum iterations $J_{\max}$ and tolerance $\tau_G$, previous frequency-domain factors $\{\bar U^{(k)},\bar S^{(k)},\bar V^{(k)}\}$ as the initial values.
+		\ENSURE Global component $\mathcal{M}^{t+1}$.		
+		\STATE Compute $\mathcal{G}^{t}=\mathcal{X}^{t}-\mathcal{R}^{t}$, and apply FFT along the third dimension to obtain $\{\bar G^{(k)}\}_{k=1}^{n_3}$. Simultaneously, apply FFT to $\mathcal{U},\mathcal{S},\mathcal{V}$ to get $\{\bar U^{(k)},\bar S^{(k)},\bar V^{(k)}\}$.
+		\STATE Set the number of half-spectrum slices $K=\left\lceil\frac{n_3+1}{2}\right\rceil$. Explicitly update only for $k=1,\ldots,K$, with the remaining slices filled by conjugate symmetry.
+		\FOR{$k=1$ \textbf{to} $K$}
+		\STATE Let $B^{(k)}=\bar V^{(k)}\bar S^{(k)H}$, and use CG to solve \eqref{eq:U_vec_system} to update $\bar U^{(k)}$.
+		\STATE The update for $\bar V^{(k)}$ is completely similar to that for $\bar U^{(k)}$. 
+		Replace $K_1^{-1}, n_1, B^{(k)}$ with $K_2^{-1}, n_2, C^{(k)} = \bar U^{(k)} \bar S^{(k)}$, respectively. Solve \eqref{eq:V_vec_system} via CG to obtain $\bar V^{(k)}$.
+		\STATE Fix $\bar U^{(k)},\bar V^{(k)}$, and update $\bar S^{(k)}$ according to \eqref{eq:S_update_diag}.
+		\IF{$k>1$ and $k<K$}
+		\STATE set $k'=n_3-k+2$ and assign $(\bar U^{(k')},\bar S^{(k')},\bar V^{(k')})=\overline{(\bar U^{(k)},\bar S^{(k)},\bar V^{(k)})}$ to ensure real-valued results after iFFT.
+		\ENDIF
+		\ENDFOR
+		\STATE Apply iFFT to $\bar{\mathcal{U}},\bar{\mathcal{S}},\bar{\mathcal{V}}$ to return to the time domain, and compute $\mathcal{M}^{t+1}=\mathcal{U}^{t+1}*\mathcal{S}^{t+1}*\mathcal{V}^{t+1\top}$.
+	\end{algorithmic}
+\end{algorithm}
+
+
+
+If the average number of CG iterations per slice is denoted as $J_G$, the main computational cost of the global update stems from the matrix multiplications of the data term and the kernel matrix solves for the regularization term in each iteration. The cost is summarized in subsection \ref{sec:complexity}.
+
+
+
+
+
+
+\subsubsection{Updating the Local Component}
+Fixing $\mathcal{M}^{t+1}$, let
+\[
+\mathcal{L}^t=\mathcal{X}^t-\mathcal{M}^{t+1},
+\]
+then the local update is given by
+\begin{equation}
+	\min_{\mathcal{R}}\ \frac12\big\|P_{\Omega}(\mathcal{L}^t-\mathcal{R})\big\|_F^2 + \frac{\gamma}{2}\|\mathcal{R}\|_{K_r}^2 .
+	\label{eq:local_obj_proj}
+\end{equation}
+Let $r=\mathrm{vec}(\mathcal{R})\in\mathbb{R}^N$, $l=\mathrm{vec}(\mathcal{L}^t)\in\mathbb{R}^N$.
+Introduce the selection operator $O_\Omega\in\{0,1\}^{|\Omega|\times N}$ which extracts the components at positions $\Omega$ from an $N$-dimensional vector, while $O_\Omega^\top$ serves as the zero-filling operator. Denote $l_\Omega = O_\Omega l\in\mathbb{R}^{|\Omega|}$.
+Then \eqref{eq:local_obj_proj} is equivalent to
+\begin{equation}
+	\min_{r\in\mathbb{R}^N}\ \frac12\|l_\Omega - O_\Omega r\|_2^2 + \frac{\gamma}{2}\, r^\top K_r^{-1} r .
+	\label{eq:local_vec_obj}
+\end{equation}
+Taking the derivative with respect to $r$ and setting it to zero yields
+\begin{equation}
+	\big(O_\Omega^\top O_\Omega + \gamma K_r^{-1}\big)r = O_\Omega^\top l_\Omega .
+	\label{eq:r_rep}
+\end{equation}
+Directly solving \eqref{eq:r_rep} requires handling an $N$-dimensional variable. Following the approach in GLSKF\cite{lei2024glskf}, we introduce an observation subspace variable $z\in\mathbb{R}^{|\Omega|}$ and set
+\begin{equation}
+	r = K_r O_\Omega^\top z .
+	\label{eq:r_final_update}
+\end{equation}
+Substituting into \eqref{eq:local_vec_obj} yields an equivalent problem in terms of $z$:
+\begin{equation}
+	\min_{z\in\mathbb{R}^{|\Omega|}}\
+	\frac12\|l_\Omega - O_\Omega K_r O_\Omega^\top z\|_2^2
+	+\frac{\gamma}{2}\, z^\top (O_\Omega K_r O_\Omega^\top)\, z ,
+	\label{eq:local_z_obj}
+\end{equation}
+whose first-order optimality condition gives the linear system
+\begin{equation}
+	\big(O_\Omega K_r O_\Omega^\top + \gamma I\big)\, z = l_\Omega .
+	\label{eq:z_linear_system}
+\end{equation}
+After obtaining $z$, $r$ is recovered via \eqref{eq:r_final_update} and then reshaped back to tensor form to obtain $\mathcal{R}^{t+1}$.
+
+Equation \eqref{eq:z_linear_system} is a linear system in the $|\Omega|$-dimensional observation subspace and can be solved directly using the Conjugate Gradient (CG) method. The core of CG lies in efficiently computing one operator multiplication $u=(O_{\Omega}K_r O_{\Omega}^{\top}+\gamma I)v$, where $K_r=K_{r,3}\otimes K_{r,2}\otimes K_{r,1}$. To avoid explicitly forming $K_r\in\mathbb{R}^{N\times N}$, each operator multiplication is performed in the following sequence: (1) Zero padding: compute $q=O_{\Omega}^{\top}v\in\mathbb{R}^{N}$, i.e., write $v$ into the observed positions and set the remaining positions to $0$; (2) Kronecker MVM: compute $w=K_r q$, which can be implemented via three mode-wise multiplications: reshape $q$ into a tensor and multiply it by $K_{r,1},K_{r,2},K_{r,3}$ sequentially, which is equivalent to performing $\times_1 K_{r,1}$, $\times_2 K_{r,2}$, $\times_3 K_{r,3}$ on the third-order tensor; (3) Indexing and regularization: return $u=O_{\Omega}w+\gamma v$. Therefore, one CG iteration requires only two indexing operations and one structured Kronecker MVM, with the complexity uniformly accounted for in subsection \ref{sec:complexity}. Algorithm~\ref{alg:update_local} presents the entire process of local component updating.
+
+\begin{algorithm}[!htbp]
+	\caption{Updating the Local Component}
+	\label{alg:update_local}
+	\begin{algorithmic}[1]
+		\REQUIRE Current complete tensor $\mathcal{X}^{t}$, global component $\mathcal{M}^{t+1}$, selection operators $O_{\Omega}$,
+		Kernel matrix $K_r=K_{r,3}\otimes K_{r,2}\otimes K_{r,1}$, weight $\gamma$, CG maximum iterations $J_{\max}$ and tolerance $\tau_R$.
+		\ENSURE Local component $\mathcal{R}^{t+1}$.
+		
+		\STATE Compute $\mathcal{L}^{t}=\mathcal{X}^{t}-\mathcal{M}^{t+1}$, and set 
+		$l_{\Omega}=O_\Omega\mathrm{vec}\big(P_{\Omega}(\mathcal{L}^{t})\big)$.
+		\STATE Solve \eqref{eq:z_linear_system} using CG to obtain $z$, where each operator multiplication $u=(O_{\Omega}K_r O_{\Omega}^{\top}+\gamma I)v$ is implemented in three steps: $q=O_{\Omega}^{\top}v$ (zero padding), $w=K_r q$ (Kronecker MVM), and $u=O_{\Omega}w+\gamma v$ (indexing and regularization).
+		\STATE Compute $r=K_r O_{\Omega}^{\top}z$, and reshape to obtain $\mathcal{R}^{t+1}=\mathrm{reshape}(r,n_1,n_2,n_3)$.
+	\end{algorithmic}
+\end{algorithm}
+
+\subsection{Implementation Details and Parameter Description}
+\label{sec:impl}
+%\label{sec:params}
+In implementation, the global update is performed slice-by-slice in the frequency domain: after applying FFT to $\mathcal{G}=\mathcal{X}-\mathcal{R}$, the linear systems for $\bar U^{(k)}$ and $\bar V^{(k)}$ are solved respectively, followed by updating $\bar S^{(k)}$, and finally transforming back to the time domain via iFFT to obtain $\mathcal{M}$. Due to the conjugate symmetry property of frequency-domain slices, only half of the slices need to be computed, with the remaining slices filled by conjugate symmetry. This not only reduces computational cost but also ensures real-valued tensors after the inverse transform.
+
+For numerical solution, both Algorithm~\ref{alg:update_global} and Algorithm~\ref{alg:update_local} employ CG. Each iteration only involves operator multiplications, avoiding explicit construction of large Kronecker matrices. In practice, the solution from the previous iteration can be used as the initial guess to reduce the number of CG iterations.
+
+\begin{algorithm}[!htbp]
+	\caption{Overall Update Procedure}
+	\label{alg:overall}
+	\begin{algorithmic}[1]
+		\REQUIRE Observed tensor $\mathcal{Y}$, index set $\Omega$, tubal-rank $r_g$, weights $\rho,\gamma$, stage transition step $K_0$, maximum iterations $T$, stopping threshold $\varepsilon$, kernel matrix operators $K_1^{-1},K_2^{-1}$ and $K_r$.
+		\ENSURE Completed result $\widehat{\mathcal{X}}$.
+		
+		\STATE Initialize $\mathcal{X}^{0}$: $P_{\Omega}(\mathcal{X}^{0})=P_{\Omega}(\mathcal{Y})$, fill missing positions with the mean value; set $\mathcal{R}^{0}=0$ and {\color{blue} randomly initialize global factors to obtain} $\mathcal{M}^{0}$.
+		\FOR{$t=0$ \textbf{to} $T-1$}
+		\STATE Update $\mathcal{M}^{t+1}$ using Algorithm~\ref{alg:update_global} with input $(\mathcal{X}^{t},\mathcal{R}^{t})$.
+		\STATE Set $\mathcal{Z}=\mathcal{M}^{t+1}+\mathcal{R}^{t}$, and apply observation consistency projection $\mathcal{X}^{t+1}=P_{\Omega}(\mathcal{Y})+P_{\Omega^c}(\mathcal{Z})$.
+		\IF{$t+1\ge K_0$}
+		\STATE update $\mathcal{R}^{t+1}$ using Algorithm~\ref{alg:update_local} with input $(\mathcal{X}^{t+1},\mathcal{M}^{t+1})$, and set $\mathcal{X}^{t+1}=P_{\Omega}(\mathcal{Y})+P_{\Omega^c}(\mathcal{M}^{t+1}+\mathcal{R}^{t+1})$. \ELSE
+		\STATE set $\mathcal{R}^{t+1}=0$.
+		\ENDIF
+		\IF{$\|\mathcal{X}^{t+1}-\mathcal{X}^{t}\|_F/\|\mathcal{T}\|_F<\varepsilon$}
+		\STATE stop the iteration.
+		\ENDIF
+		\ENDFOR
+		\STATE \textbf{return} $\widehat{\mathcal{X}}=\mathcal{X}^{t+1}$.
+	\end{algorithmic}
+\end{algorithm}
+
+
+
+
+Due to the additive structure of the model $\mathcal{X}=\mathcal{M}+\mathcal{R}$, simultaneous optimization of both components from random initialization tends to cause oscillations in the early stages. Therefore, this paper adopts a staged strategy, only the global component is updated during the first $K_0$ iterations (setting $\mathcal{R}=0$), and local updates are introduced only after the global structure stabilizes \cite{lei2024glskf}. To determine convergence, we compare the change between two consecutive iterations and stop when it falls below a threshold:
+\begin{equation}
+	\mathrm{tol}^{(t)}=\frac{\|\mathcal{X}^{(t)}-\mathcal{X}^{(t-1)}\|_F}{\|\mathcal{T}\|_F}<\varepsilon,
+\end{equation}
+where $\|\mathcal{T}\|_F$ is \textcolor{blue}{a fixed normalization factor}.
+Since the observed positions remain unchanged after each projection, the above formula actually reflects the magnitude of changes in the filled values at the missing positions.
+The overall implementation of data recovery is summarized in Algorithm~\ref{alg:overall}.
+
+
+
+
+
+The model \eqref{eq:overall_obj} involves several types of model parameters and hyperparameters:
+
+\textbf{\romannumeral1) Covariance matrices.}
+The matrices $K_1,K_2,K_3$ used in the regularization of global factors control the strength of correlation constraints along different dimensions.
+The local residual adopts a separable structure $K_r=K_{r,3}\otimes K_{r,2}\otimes K_{r,1}$, facilitating scalable solutions via Kronecker MVM.
+When using tapering functions, $K_{r,1}$ and $K_{r,2}$ can yield sparse structures, significantly reducing the actual cost of Kronecker MVM \cite{gneiting2002compact,furrer2006tapering}.
+For the third dimension, e.g., RGB channels or time frames, if a natural distance structure is lacking, $K_{r,3}$ can be initialized as $I$ and updated during iterations using the empirical covariance of the current $\mathcal{R}$ \cite{lei2024glskf}.
+
+\textbf{\romannumeral2) Weight parameters.}
+$\rho$ controls the strength of the global factor regularization term,
+while $\gamma$ controls the strength of the local residual regularization term. Together they determine the trade-off between the global low-rank structure and the locally correlated residual.
+
+\textbf{\romannumeral3) Tensor tubal rank.}
+$r_g$ controls the upper bound of the tubal-rank for the global component $\mathcal{M}$.
+In the presence of a local component, $r_g$ can often be set to a relatively small value to prioritize capturing the global structure, while local textures are compensated by $\mathcal{R}$.
+
+
+\subsection{Complexity and Scalability}
+\label{sec:complexity}
+Let the tensor size be $n_1 \times n_2 \times n_3$, with $N = n_1 n_2 n_3$, the number of observations be $|\Omega|$, and the global rank be $r_g$.
+Denote by $J_G$ the average number of CG iterations in the global update, and by $J_R$ the average number of CG iterations in the local update within the observation subspace.
+{\color{blue}Let $\omega(A)$ represent the actual cost of solving a linear system in implementation}, when the kernel matrix is tapered and becomes sparse, $\omega(\cdot)$ is approximately linear in the number of its nonzero entries.
+In overall update procedure, each iteration includes FFT, iFFT, global update, local update, and two projections.
+The cost of FFT or iFFT is approximately $\mathcal{O}(N \log n_3)$, while the projection cost is $\mathcal{O}(N)$.
+The global update runs CG on half of the frequency-domain slices, {\color{blue}each operator application primarily consists of matrix multiplication for the data term (on the order of $\mathcal{O}(n_1 n_2 r_g)$) and matrix multiplication for the kernel regularization term. Thus, the cost of the global part can be expressed as
+\[
+\mathcal{O}\!\left(n_3\,J_G\Big(n_1 n_2 r_g + \omega(K_1^{-1}) r_g + \omega(K_2^{-1}) r_g\Big)\right),
+\]}
+where $n_3$ can be replaced by $\lceil (n_3+1)/2 \rceil$ to reflect the constant factor savings from computations in half of the frequency domain.
+The local update runs CG in the observation subspace of dimension $|\Omega|$, each operator application includes zero-padding and indexing ($\mathcal{O}(|\Omega|)$) {\color{blue}and one Kronecker matrix-vector multiplication (with cost $\omega(K_r)$). Therefore, the cost of the local part is
+\[
+\mathcal{O}\!\left(J_R\big(|\Omega| + \omega(K_r)\big)\right).
+\]}
+
+The computational cost per iteration is shown in Table \ref{tab:complexity1}, and a comparison with the computational cost of the GLSKF method is provided in Table \ref{tab:complexity2}. Compared to GLSKF (CP + local), the local update in GLSKF-tSVD (t-SVD + local) remains unchanged, still consisting of CG iterations in the observation subspace. The difference lies solely in the global update, GLSKF incurs $\mathcal{O}(J'_G C_{\mathrm{cp}})$, while GLSKF-tSVD incurs $\mathcal{O}(N \log n_3 + J_G C_{\mathrm{tsvd}})$. Here, $J'_G$ represents the average number of CG iteration steps in GLSKF method. The relative efficiency of the two approaches depends on the complexity of the two low-rank decompositions, the effective rank, and the number of CG iterations.
+
+
+\begin{table}[!htbp]
+	\centering
+	\caption{Main Computational Cost per Iteration}
+	\label{tab:complexity1}
+	
+	\begin{threeparttable}
+		\begin{tabular}{l l}
+			\toprule
+			Step & Cost (order of magnitude) \\
+			\midrule
+			FFT/iFFT & $\mathcal{O}(N\log n_3)$ \\
+			Global update (CG on half slices) &
+			$\mathcal{O}\!\left(n_3\,J_G\big(n_1n_2r_g+\omega(K_1^{-1})r_g+\omega(K_2^{-1})r_g\big)\right)$ \\
+			Local update (CG in observation subspace) &
+			$\mathcal{O}\!\left(J_R\big(|\Omega|+\omega(K_r)\big)\right)$ \\
+			Projection (observation consistency) & $\mathcal{O}(N)^{\tnote{a}}$ \\
+			\bottomrule
+		\end{tabular}
+			
+		\begin{tablenotes}[flushleft]
+			\footnotesize
+			\item[a] In this implementation, a dense mask is used for element-wise fusion, so the projection cost is $O(N)$; if only the observed positions are indexed and written back on the predicted tensor, the cost of this step becomes $O(|\Omega|)$.
+		\end{tablenotes}
+	\end{threeparttable}
+\end{table}
+
+\begin{table}[!htbp]
+	\centering
+	\caption{Comparison of Model Complexity}
+	\label{tab:complexity2}
+	\begin{tabular}{l cc}
+		\toprule
+		Solution & Global cost & Local cost \\\midrule
+		GLSKF (CP + Local) & $\mathcal{O}\!\left(J'_G\cdot C_{\text{CP}}\right)$ & $\mathcal{O}\!\left(J_R \sum_{d=1}^{3}\omega(K_{r,d})\frac{N}{n_d}\right)$ \\
+		GLSKF-tSVD (t-SVD + Local) & $\mathcal{O}\!\left(N\log n_3 + J_G\cdot C_{\text{tSVD}}\right)$ & $\mathcal{O}\!\left(J_R \sum_{d=1}^{3}\omega(K_{r,d})\frac{N}{n_d}\right)$ \\
+		\bottomrule
+	\end{tabular}
+	\vspace{2pt}
+\end{table}
+
+\subsection{Convergence Analysis}
+\label{sec:convergence}
+This subsection discusses the convergence of Algorithm~\ref{alg:overall}. To incorporate the observation consistency projection step in the algorithm into a unified optimization framework, we introduce an auxiliary variable $\mathcal{X}$ to explicitly represent the observation constraint, and equivalently rewrite the original optimization problem \eqref{eq:overall_obj} into the following constrained form:
+\begin{equation}\label{eq:overall_obj_aux}
+	\begin{split}
+		\min_{\mathcal{X},\mathcal{U},\mathcal{S},\mathcal{V},\mathcal{R}}\;& \frac{1}{2}\big\|\mathcal{X}-\mathcal{U}*\mathcal{S}*\mathcal{V}^{\top}-\mathcal{R}\big\|_{F}^{2}
+		+\frac{\rho}{2}\Big(\|\mathcal{U}\|^{2}_{K_1,I_{r_g},K_3}+\|\mathcal{V}\|^{2}_{K_2,I_{r_g},K_3}\Big)
+		+\frac{\gamma}{2}\|\mathcal{R}\|^{2}_{K_r},\\
+		\mathrm{s.t.}\quad\; &P_{\Omega}(\mathcal{X})=P_{\Omega}(\mathcal{Y}).
+	\end{split}
+\end{equation}
+Denote the objective function of equation \eqref{eq:overall_obj_aux} as $F(\mathcal{X},\mathcal{U},\mathcal{S},\mathcal{V},\mathcal{R})$. It is easy to see that if the variable $\mathcal{X}$ is eliminated, this problem reduces to the original problem \eqref{eq:overall_obj}. Therefore, their optimal solutions are identical. From the perspective of optimization problem \eqref{eq:overall_obj_aux}, Algorithm~\ref{alg:overall} is essentially a block coordinate descent (BCD) process applied to the auxiliary variable block $\mathcal{X}$, the global factor block $(\mathcal{U},\mathcal{S},\mathcal{V})$, and the local block $\mathcal{R}$. For ease of presentation, denote the global low-rank term as $\mathcal{M} \coloneqq \mathcal{U}*\mathcal{S}*\mathcal{V}^{\top}$.
+
+
+\begin{lemma}
+	For any fixed $\mathcal{U},\mathcal{S},\mathcal{V},\mathcal{R}$, the subproblem concerning $\mathcal{X}$ in \eqref{eq:overall_obj_aux} has an optimal solution of the following form:
+	\begin{equation}
+		\mathcal{X}^{\star}=P_{\Omega}(\mathcal{Y})+P_{\Omega^{c}}\big(\mathcal{M}+\mathcal{R}\big).
+		\label{eq:x_opt_proj}
+	\end{equation}
+\end{lemma}
+%\hrule
+\begin{proof}
+	Note that only the first term in the objective function involves $\mathcal{X}$. On the observed set $\Omega$, the constraint forces $\mathcal{X}$ to equal $P_{\Omega}(\mathcal{Y})$. On the unobserved set $\Omega^c$, the problem reduces to the unconstrained minimization problem $\min \|\mathcal{X}-(\mathcal{M}+\mathcal{R})\|_F^2$, whose optimal solution is clearly the predicted value $P_{\Omega^c}(\mathcal{M}+\mathcal{R})$ on this region. Therefore, the projection step in Algorithm~\ref{alg:overall} essentially solves the subproblem for $\mathcal{X}$ exactly, and this step guarantees that the objective function value $F$ is non-increasing.
+\end{proof}
+Regarding Algorithm~\ref{alg:overall}, it is easy to see that both the global update and the local update have the property of decreasing the objective function. We state this in the form of the following Lemma~\ref{con_lem}.
+\begin{lemma}[Descent property of global and local block updates]\label{con_lem}\hfill	
+	\begin{itemize}
+		\item \textbf{Global update:} With $\mathcal{X}$ and $\mathcal{R}$ fixed, the algorithm updates $\mathcal{U},\mathcal{S},\mathcal{V}$ in the frequency domain using alternating least squares (ALS). When updating one factor (e.g., $\bar{U}^{(k)}$) while keeping the other two fixed, the subproblem is a convex quadratic program, which has an analytical solution or can be solved via CG to achieve sufficient descent. Therefore, this inner alternating update process ensures that the objective function $F$ is non-increasing.
+		\item \textbf{Local update:} With $\mathcal{X}$ and the global factors fixed, updating $\mathcal{R}$ is equivalent to solving a strictly convex generalized least squares problem. Since this subproblem is convex, its exact solution or an approximate solution satisfying sufficient descent conditions also makes $F$ non-increasing.
+	\end{itemize}
+\end{lemma}
+
+\begin{theorem}[Convergence of the sequence of objective function values]\label{con_th1}
+	Let $\{(\mathcal{X}^{t},\mathcal{U}^{t},\mathcal{S}^{t},\mathcal{V}^{t},\mathcal{R}^{t})\}$ $(t\ge 0)$ be the sequence generated by Algorithm~\ref{alg:overall}. The corresponding sequence of objective function values must have the limit \( \inf_{t}F(\mathcal{X}^{t},\mathcal{U}^{t},\mathcal{S}^{t},\mathcal{V}^{t},\mathcal{R}^{t}) \). 
+\end{theorem}
+
+\begin{proof}
+Denote the global factor set as $\Theta^t = (\mathcal{U}^t, \mathcal{S}^t, \mathcal{V}^t)$. According to the algorithm procedure, each update step guarantees that the objective function is non-increasing, satisfying the following inequalities:
+\begin{equation}
+	\begin{aligned}
+		F(\mathcal{X}^t, \Theta^t, \mathcal{R}^t)
+		&\ge F(\mathcal{X}^t, \Theta^{t+1}, \mathcal{R}^t) & \text{(global update)} \\
+		&\ge F(\mathcal{X}^{t+\frac{1}{2}}, \Theta^{t+1}, \mathcal{R}^t) & \text{(projection step)} \\
+		&\ge F(\mathcal{X}^{t+\frac{1}{2}}, \Theta^{t+1}, \mathcal{R}^{t+1}) & \text{(local update)} \\
+		&\ge F(\mathcal{X}^{t+1}, \Theta^{t+1}, \mathcal{R}^{t+1}) & \text{(projection step)}
+	\end{aligned}
+\end{equation}
+Since the objective function $F \ge 0$ is bounded below, by the monotone convergence theorem, the sequence of objective function values $\{F(\mathcal{X}^t, \Theta^t, \mathcal{R}^t)\}$ converges.	
+\end{proof}
+
+
+
+
+\begin{theorem}[Convergence of Algorithm~\ref{alg:overall}]
+	Building upon the convergence of the objective function value guaranteed by Theorem \ref{con_th1}, and noting that the objective function \eqref{eq:overall_obj_aux} is convex with respect to $\mathcal{X}$ and $\mathcal{R}$, and possesses multi-block convexity with respect to the global factor block $(\mathcal{U}, \mathcal{S}, \mathcal{V})$, according to the standard convergence theory for nonconvex block coordinate descent (BCD) methods \cite{bertsekas1999nonlinear}, any accumulation point of the sequence is a stationary point of the original optimization problem \eqref{eq:overall_obj}.
+\end{theorem}
+
+\section{Experiments}
+To validate the effectiveness of the proposed GLSKF-tSVD method for color image tensor completion tasks, we selected classic color images from the USC-SIPI Image Database as the test dataset \cite{usc_sipi_database}.
+The experiment includes 7 images: Tree, Female, House256 (resolution $256\times256\times3$) and Sailboat, Peppers, House512, Airplane (resolution $512\times512\times3$).
+
+The missing pattern adopts random missing: each tensor element $(i,j,k)$ is independently observed with probability $SR \in \{0.2, 0.1, 0.05\}$ ($\Omega_{ijk}=1$), corresponding to missing rates of $80\%$, $90\%$, and $95\%$, respectively. This setup allows the three RGB channels at the same pixel location to have different observation states, thus more closely adhering to the general tensor completion observation model.
+
+In terms of preprocessing, the training mean is first computed from the observed set $\Omega$ and subtracted (demeaning) to reduce the impact of brightness scale on optimization; after reconstruction, the mean is added back and pixel values are clipped to a valid range.
+The evaluation metrics used are Peak Signal-to-Noise Ratio (PSNR) and Structural Similarity Index (SSIM) \cite{wang2004ssim}, where both PSNR and SSIM are computed separately for the three RGB channels and then averaged, ensuring comparability across different methods under the same measurement standard.
+
+\subsection{Compared Methods and Parameter Settings}
+We selected representative low-rank tensor completion and image inpainting methods for comparison, including: HaLRTC\cite{liu2013tensor}, Smooth PARAFAC Tensor Completion (SPC)\cite{yokota2016smooth}, GLTC-TNN (GeoTensor engineering implementation)\cite{chen2025geotensor}, and the original GLSKF\cite{lei2024glskf}.
+Among these, the regularization parameter for HaLRTC was selected from $\{10^{-4},10^{-5}\}$ and the best result is reported; SPC was implemented under both TV and QV smoothness constraints, and the best result is reported;
+GLTC-TNN uses the default settings from the public implementation ($\theta=100,\alpha=10,\rho=1.001,\beta=0.1\rho$, maximum iterations 1000) and its output is directly reported\cite{chen2025geotensor}.
+GLSKF was tuned via grid search following the recommendations in the original paper, with settings $R=20$, tapering\_range$=20$, and the optimal combination selected from $\rho\in\{1,10,20\}$, $\gamma\in\{1,5,10\}$\cite{lei2024glskf}.
+
+For the proposed GLSKF-tSVD method, the parameters are set as: $\rho\in\{1,5,10,15,20\}$, $\gamma\in\{1,5,10,15,20\}$,
+with tapering\_range fixed at $=30$, $d_{\text{MaternU}}=d_{\text{MaternR}}=3$,
+global tubal-rank $r_g=10$, maximum number of iterations maxiter$=30$, and phased parameter $K_0=25$.
+The above settings ensure a consistent tuning strategy for the comparison: for methods that allow parameter tuning, their best performance is reported; for methods relying on public implementations, their default configurations are followed and results are reported faithfully.
+
+
+\subsection{Quantitative Results and Analysis}  
+Table~\ref{tab:color_inpainting_all} presents the PSNR/SSIM comparison results on seven USC-SIPI color images under three sampling rates $SR$ (0.2/0.1/0.05).  
+Overall, when $SR=0.2$ and $SR=0.1$ (with missing rates of $80\%$ and $90\%$, respectively), GLSKF-tSVD achieves the optimal or tied-optimal PSNR/SSIM across all test images, demonstrating that the t-SVD-based low-rank representation captures the global components and more fully characterizes the coupling correlations along the third dimension (RGB channels), thereby maintaining more stable global structure recovery under high missing rates \cite{kilmer2013operators}.  
+For example, on the Tree image ($SR=0.2$), GLSKF-tSVD achieves 26.37/0.821, showing an improvement over GLSKF’s 24.88/0.782; on the Airplane image ($SR=0.2$), GLSKF-tSVD reaches 31.85/0.919, also outperforming GLSKF’s 30.06/0.910.  
+This trend indicates that when the observation ratio still allows for relatively reliable estimation of global components, the t-SVD low-rank prior is more effective at capturing cross-channel consistency in frequency-domain slices, thereby improving color consistency and structural fidelity \cite{zhang2017tsvd}.
+
+Under the more extreme case of $SR=0.05$ (with a missing rate of $95\%$), the differences among the methods become more pronounced: GLSKF-tSVD still achieves the optimal PSNR/SSIM on images such as Tree, Female, House256, House512, and Airplane,  
+but on Sailboat and Peppers, GLSKF slightly outperforms GLSKF-tSVD.  
+This observation suggests that when observations are extremely scarce, the balance between the global low-rank representation and the regularization weight directly affects the recovery preference between texture and edges: the global CP structure of GLSKF may be more “conservative” on some strongly textured samples, leading to better SSIM performance \cite{lei2024glskf};  
+whereas GLSKF-tSVD exhibits stronger global expressive power, and under extreme missing conditions, insufficient regularization may introduce more pronounced detail uncertainty, resulting in a drop in SSIM.  
+Overall, Table~\ref{tab:color_inpainting_all} shows that GLSKF-tSVD maintains a stable advantage in scenarios with $80\%$ and $90\%$ missing data, and remains leading on most images even under $95\%$ missing data,  
+indicating that the combination of the proposed t-SVD-based global characterization with local correlation residuals offers better robustness for color image inpainting under high missing rates \cite{lei2024glskf}.
+
+\subsection{Visualization Comparison}  
+To further analyze the visual effects of different methods, we present the reconstruction visualizations of the seven images under $SR=0.1$ ($90\%$ missing rate) (see Figure~\ref{fig1}). From the figure, it can be observed that HaLRTC often exhibits noticeable over-smoothing along with blocky and streaky artifacts, which is consistent with the characteristic that unfolding-based low-rank tensor completion tends to lose high-frequency details under high missing rates \cite{liu2013tensor}. Compared to HaLRTC, SPC better preserves the overall structural contours, but still suffers from smoothed-out details or blurred edges in textured regions, aligning with its modeling approach that enforces continuity through smoothness constraints \cite{yokota2016smooth}. GLTC-TNN demonstrates relatively stable color consistency, yet minor edge fractures or texture “blurring” may still occur in fine structures (e.g., tree branches, eaves lines), indicating that relying solely on global tensor nuclear norm-type constraints remains insufficient for fully recovering local details under extremely high missing rates \cite{chen2025geotensor}.
+
+More importantly, the comparison between the proposed GLSKF-tSVD and GLSKF reveals the advantage of t-SVD-based low-rank characterization: in the Tree image, GLSKF-tSVD achieves a more coherent recovery of the transitions between tree branches and the sky background, reducing local color bleeding; in House256/House512, the slanted roof edges and wall boundaries appear sharper, and the color gradations are closer to those of the original image; in Female, the structures in the facial and hair regions are more stable, with fewer fine artifacts occasionally observed in GLSKF. These observations are consistent with the design of our model: the global t-SVD component models channel coupling more naturally through low-rank representation in frequency-domain slices, thereby improving the recovery quality of global structure and color consistency \cite{kilmer2013operators}, while the local correlation residual module inherits the kernelized GLS concept from GLSKF to compensate for high-frequency details \cite{lei2024glskf}.
+
+\begin{table}[!htbp]
+	\centering
+	\caption{\textbf{Comparison of color image inpainting (PSNR/SSIM).}}
+	\label{tab:color_inpainting_all}
+	\small
+	\setlength{\tabcolsep}{4.5pt}
+	\renewcommand{\arraystretch}{0.8}
+	\begin{threeparttable}
+		\begin{tabular}{c c c|c c c c c}
+			\toprule
+			\multicolumn{2}{c}{Data} & SR & HaLRTC & SPC & GLTC-TNN & GLSKF & GLSKF-tSVD \\
+			\midrule
+			
+			\multirow{9}{*}{\makecell[c]{Color image\\$256\times256\times3$}}
+			& \multirow{3}{*}{\makecell[c]{Tree}}
+			& 0.2  & 19.97/0.519 & 23.53/0.711 & 22.61/0.747 & 24.88/0.782 & \textbf{26.37/0.821} \\
+			&      & 0.1  & 16.54/0.324 & 21.17/0.633 & 20.77/0.654 & 22.71/0.705 & \textbf{23.45/0.726} \\
+			&      & 0.05 & 13.64/0.192 & 18.61/0.474 & 18.10/0.501 & 21.01/0.613 & \textbf{21.34/0.585} \\
+			\cmidrule(lr){2-8}
+			
+			& \multirow{3}{*}{\makecell[c]{Female}}
+			& 0.2  & 24.35/0.665 & 28.73/0.813 & 28.63/0.839 & 29.66/0.844 & \textbf{30.58/0.860} \\
+			&      & 0.1  & 20.64/0.500 & 26.59/0.744 & 26.71/0.768 & 27.37/0.788 & \textbf{28.32/0.799} \\
+			&      & 0.05 & 17.76/0.383 & 24.74/0.675 & 24.48/0.689 & 25.68/0.727 & \textbf{25.77/0.715} \\
+			\cmidrule(lr){2-8}
+			
+			& \multirow{3}{*}{\makecell[c]{House256}}
+			& 0.2  & 23.96/0.648 & 27.02/0.777 & 26.52/0.807 & 30.36/0.838 & \textbf{31.30/0.854} \\
+			&      & 0.1  & 20.24/0.459 & 24.81/0.715 & 24.61/0.732 & 27.38/0.761 & \textbf{28.19/0.772} \\
+			&      & 0.05 & 16.63/0.292 & 23.29/0.665 & 21.59/0.590 & 24.54/0.692 & \textbf{25.06/0.679} \\
+			
+			\midrule
+			
+			\multirow{12}{*}{\makecell[c]{Color image\\$512\times512\times3$}}
+			& \multirow{3}{*}{\makecell[c]{Sailboat}}
+			& 0.2  & 20.52/0.526 & 24.30/0.686 & 23.34/0.699 & 25.66/0.732 & \textbf{27.25/0.779} \\
+			&      & 0.1  & 16.94/0.368 & 22.82/0.628 & 21.49/0.567 & 23.89/0.671 & \textbf{24.55/0.708} \\
+			&      & 0.05 & 13.43/0.233 & 19.93/0.472 & 18.85/0.430 & \textbf{22.73/0.623} & 22.62/0.534 \\
+			\cmidrule(lr){2-8}
+			
+			& \multirow{3}{*}{\makecell[c]{Peppers}}
+			& 0.2  & 23.19/0.568 & 27.49/0.748 & 26.36/0.764 & 27.59/0.739 & \textbf{29.75/0.789} \\
+			&      & 0.1  & 19.10/0.372 & 25.10/0.687 & 23.82/0.664 & 26.03/0.698 & \textbf{26.77/0.732} \\
+			&      & 0.05 & 15.26/0.229 & 21.55/0.607 & 19.53/0.442 & \textbf{24.69/0.665} & 23.49/0.614 \\
+			\cmidrule(lr){2-8}
+			
+			& \multirow{3}{*}{\makecell[c]{House512}}
+			& 0.2  & 23.36/0.660 & 25.42/0.761 & 24.59/0.811 & 27.96/0.871 & \textbf{28.69/0.879} \\
+			&      & 0.1  & 20.24/0.490 & 23.46/0.680 & 22.90/0.715 & 25.02/0.784 & \textbf{25.82/0.800} \\
+			&      & 0.05 & 17.21/0.317 & 21.77/0.606 & 20.39/0.560 & 23.22/0.706 & \textbf{23.29/0.696} \\
+			\cmidrule(lr){2-8}
+			
+			& \multirow{3}{*}{\makecell[c]{Airplane}}
+			& 0.2  & 24.38/0.687 & 26.27/0.788 & 26.19/0.861 & 30.06/0.910 & \textbf{31.85/0.919} \\
+			&      & 0.1  & 20.86/0.514 & 24.45/0.743 & 24.18/0.788 & 27.32/0.862 & \textbf{28.86/0.864} \\
+			&      & 0.05 & 17.04/0.307 & 22.97/0.697 & 20.61/0.596 & 25.34/0.802 & \textbf{25.85/0.787} \\
+			
+			\bottomrule
+		\end{tabular}
+		
+		\begin{tablenotes}[flushleft]
+			\footnotesize
+			\item Best results are highlighted in bold fonts.
+		\end{tablenotes}
+	\end{threeparttable}
+\end{table}
+
+
+
+\begin{figure}[!htb]
+	\centering
+	\includegraphics[width=1.0\textwidth]{splicingresults.png}
+	\caption{Results of image inpainting under 90\%RM, i.e., SR=0.1.  }
+	\label{fig1}
+\end{figure}
+
+\FloatBarrier
+
+
+\section{Discussion}  
+\subsection{Analysis of Method Effectiveness and Mechanistic Explanation}  
+From the perspective of model architecture, the advantages of GLSKF-tSVD primarily stem from the integration of two aspects: enhanced global structural representation capability and the retention of a local detail compensation mechanism. First, the global representation employs a low-rank formulation based on the t-product/t-SVD, which, compared to CP decomposition, more effectively captures coupling correlations along the third dimension. For color images, significant correlations exist among RGB channels, and the global structure often manifests as cross-channel consistent edges, contours, and low-frequency color distributions. By imposing low-rank constraints and performing reconstruction on frequency-domain slices, t-SVD enables such coupling information to be encoded more directly into the global model representation. This allows for more stable overall structure and color consistency even under high missing rates~\cite{zhang2017tsvd}, which aligns with the observation in Table~\ref{tab:color_inpainting_all} that GLSKF-tSVD consistently outperforms most samples at SR=0.2 and SR=0.1. Second, this work does not weaken the locally correlated residual module of GLSKF; instead, it retains its core concept of characterizing local correlations via structured covariance and achieving scalable inference through Kronecker structures and iterative linear solutions~\cite{lei2024glskf}. Consequently, during the reconstruction process, the global representation primarily handles low-frequency principal components and overall details, while the local residual component further compensates for high-frequency information such as edges and textures, thereby avoiding the computational overhead and overfitting risks associated with merely increasing the global rank.
+
+From an optimization perspective, time-domain observation projection and staged updates ($K_0$) directly contribute to stability. This paper employs a “predict–project” approach to explicitly enforce $P_{\Omega}(\mathcal{X}) = P_{\Omega}(\mathcal{Y})$, ensuring that observation consistency is always guaranteed. This effectively decouples mask handling from the subproblem, reducing numerical instability and interpretational difficulties caused by introducing complex weights in the frequency-domain update. This strategy of iteratively projecting onto the feasible set combined with block coordinate updates is more transparent in implementation and facilitates reproducibility and debugging~\cite{lei2024glskf}. Additionally, the staged restoration concept—first global, then local—avoids oscillation caused by the interplay between global and local variables in early iterations, thereby enhancing convergence stability under high-missing-rate conditions. This aligns with the empirical practices established in GLSKF~\cite{lei2024glskf}.
+
+
+\subsection{Empirical Implications of Differences from GLSKF}  
+The key change introduced in this paper relative to GLSKF lies in the parameterization of the global component’s low-rank structure: GLSKF employs CP decomposition with tensor rank \(R\) to characterize global structure~\cite{lei2024glskf}, whereas this work adopts a t-SVD-based low-rank representation, using tubal rank \(r_g\) to control the global degrees of freedom~\cite{zhang2017tsvd}. This is not a simple substitution; the differences manifest in the following ways: CP decomposition expresses structure as a sum of rank-1 outer products across modes, making it suitable for capturing separable cross-modal correlations. In contrast, t-SVD leverages circular convolution along the third dimension and low-rank structures in frequency-domain slices to encode coupled correlations, making it better suited for regularly gridded visual data where the third dimension corresponds to channels or time~\cite{zhang2017tsvd}. Therefore, under mainstream inpainting settings with 80\% and 90\% missing rates, global modeling based on t-SVD tends to more effectively recover cross-channel consistent contours and color transitions, thereby yielding stable advantages in terms of PSNR and SSIM.
+
+
+It should be noted that Table~\ref{tab:color_inpainting_all} shows that under the extremely sparse observation condition of SR=0.05 (95\% missing), GLSKF-tSVD still maintains a leading edge on most images, but is slightly outperformed by GLSKF on Sailboat and Peppers. This phenomenon should not be simply interpreted as t-SVD being inferior to CP decomposition in representing global structure; a more plausible explanation is that when observations are extremely sparse, the identifiability of the global low-rank model decreases significantly, making the results more sensitive to the rank/regularization trade-off. The stronger representational capacity of t-SVD, when lacking sufficient observational constraints, may lead to greater susceptibility to fine-scale uncertainty if regularization is too weak or the rank is set too high, thereby affecting structural similarity (SSIM). In contrast, the CP-based global model may be more "conservative" on certain samples, yielding more stable structural metrics under extreme missing rates~\cite{lei2024glskf}. This boundary phenomenon suggests that in extremely sparse scenarios, merely enhancing global representational power is insufficient to guarantee overall superiority; further strengthening local constraints or adopting adaptive rank/regularization strategies warrants further investigation.
+
+\subsection{Parameter Sensitivity and Practical Recommendations}  
+In the implementation phase of this study, we conducted systematic searches and comparisons for key hyperparameters; however, due to space constraints, the complete ablation results are not presented in the main text. Drawing on the model formulation and the experimental phenomena observed during the search process, we provide the following tuning recommendations of practical value for engineering applications. First, the choice of tubal-rank $r_g$ significantly influences global modeling: a smaller $r_g$ tends to impose stronger structural compression, which helps suppress uncertainty and artifacts in high-missing-rate scenarios, but may come at the cost of reduced texture and detail fidelity. Conversely, a larger $r_g$ enhances the model’s capacity to fit complex structures, yet may introduce excessive degrees of freedom and amplify sensitivity to noise when observations are extremely sparse. Considering the boundary phenomenon observed at SR=0.05 in Table~\ref{tab:color_inpainting_all}, a more conservative $r_g$ or stronger global smoothing regularization tends to yield greater robustness under extreme missing conditions.
+
+Second, the global regularization weight $\rho$ and the local regularization weight $\gamma$ govern the balance between global smoothing and local compensation. In general, increasing $\rho$ enhances the smoothness and stability of the global factor, which helps improve contour and color consistency in regions with large missing areas, but excessive values may lead to oversmoothing. Increasing $\gamma$ suppresses the magnitude of the local residual, reducing the tendency of the residual to over-interpret noise. For structure-dominated images (e.g., buildings, aircraft), a larger $\rho$ can be used to reinforce global consistency. For texture-rich images (e.g., Peppers), a relatively smaller $\gamma$ or a larger local correlation range can be considered to enhance detail compensation, provided that stability is maintained.
+
+Third, the tapering range affects the sparsity of the local covariance and the effective range of local correlations: a smaller range is more favorable for computational efficiency and localized representation, whereas a larger range helps capture longer-range local correlations but may increase computational overhead and introduce oversmoothing. Finally, the stage parameter $K_0$ determines when the local module is introduced. The current setting, where $K_0$ is close to the maximum number of iterations, implies that the local residual primarily takes effect in the later stage of convergence. This is beneficial for stability but may limit sufficient iteration for local details. When pursuing enhanced texture recovery, it is advisable to introduce the local module earlier to achieve a better trade-off between stability and detail compensation.
+
+
+\subsection{Complexity and Implementation Details}  
+The computational structure of the proposed method can be summarized as “global frequency-domain block-wise update + local Kronecker-CG update + time-domain projection.” From the perspective of computational complexity, the overhead of FFT/inverse FFT along the third dimension is typically small, especially in the case of color images where $n_3 = 3$, and it hardly constitutes a major cost. The primary computational cost of the global module stems from solving the linear system for factor updates on frequency-domain slices, which is related to $n_1 n_2 r_g$ and the number of conjugate gradient iterations.
+
+
+The key advantage of the local module lies in avoiding the explicit construction of large-scale covariance matrices; instead, it relies on Kronecker matrix-vector products (MVMs) and iterative linear solvers to achieve near-linear-scale updates~\cite{lei2024glskf}. When the local covariance is endowed with a sparse/banded structure via a tapering function, the cost per MVM can be significantly reduced, thereby maintaining scalability for large images~\cite{furrer2006tapering}. At the implementation level, if numerical stabilization of the covariance matrix is not performed (e.g., adding diagonal perturbation to improve the condition number), iterative solvers may suffer from slow convergence or even failure. Meanwhile, initializing the solver with the solution from the previous iteration and setting a reasonable CG tolerance can considerably reduce the number of iteration steps and enhance overall stability~\cite{hestenes1952cg}.
+
+\subsection{Limitations and Potential Improvements}  
+The current validation of the proposed method is primarily focused on color image completion on regular grids, and several application boundaries remain to be clarified. First, the experiments in this work adopt element-wise random missingness, where each tensor element \((i,j,k)\) is sampled independently, allowing inconsistent observation states across the RGB channels at the same spatial location. The time-domain projection in this paper enforces consistency constraints channel-wise on each observed entry, making cross-channel synchronized masks a special case of this setting. More structured missing patterns (e.g., block missing, stripe missing, or occlusions) alter the spatial distribution of the observation operator and may require more suitable staged strategies and parameter adjustments to maintain stability. Second, under extreme missing rates (e.g., SR=0.05), the model becomes more sensitive to the rank–regularization trade-off. The occasional reversal observed for individual images in Table~\ref{tab:color_inpainting_all} suggests that more robust adaptive strategies—such as adaptive rank selection or residual-based regularization scheduling—are still needed under extremely sparse observations. Finally, covariance modeling inherently introduces assumptions about correlation structure. In scenarios involving strong non-stationarity, non-Gaussian noise, or irregular sampling grids, more flexible non-stationary kernels, mixture kernels, or structure-adaptive modeling may be required to maintain performance and stability~\cite{rasmussen2006gpml}.
+
+
+\section{Conclusion and Future Work}
+
+This paper focuses on the tensor completion problem for color images with high missing rates, investigating how to simultaneously recover global structures and local details from only partial observations $P_{\Omega}(\mathcal{Y})$ while strictly satisfying the observation consistency constraint $P_{\Omega}(\mathcal{X}) = P_{\Omega}(\mathcal{Y})$. To this end, we propose the GLSKF-tSVD method, which aims to enhance the representation capability for channel coupling correlations while preserving the advantages of structured covariance modeling and scalable optimization.
+This paper employs an alternating optimization strategy to update global and local variables, and explicitly enforces observation consistency in each iteration through time-domain observation projection. Combined with Kronecker matrix-vector multiplication and conjugate gradient iterative solving, scalable computation in high-dimensional scenarios is achieved. This design maintains implementation simplicity and numerical stability without introducing additional dual variables.
+
+In the experimental section, this paper constructs random missing settings (SR = 0.2/0.1/0.05) on the USC-SIPI color image dataset and employs PSNR and SSIM for evaluation~\cite{wang2004ssim}. Quantitative results show that GLSKF-tSVD achieves the best overall PSNR and SSIM under 80\% and 90\% missing conditions, and remains leading for most images under the extremely sparse observation of 95\% missing. Qualitative comparisons further demonstrate that the proposed method achieves better visual effects in terms of edge continuity, color consistency, and detail texture recovery, validating the effectiveness of the GLSKF-tSVD method.
+
+The main contributions of this work can be summarized in three points: First, within the GLSKF framework, we propose the GLSKF-tSVD method for color images, which enhances the representation capability for channel coupling correlations through t-SVD-based global modeling~\cite{zhang2017tsvd}. Second, we provide an alternating optimization and observation projection mechanism that is consistent with implementation, ensuring observation consistency constraints while maintaining reproducibility. Third, through comparative experiments with various representative methods, we systematically validate the advantages of the proposed method in high-missing-rate color image completion tasks, and reveal the performance boundaries and parameter sensitivity characteristics under extreme missing conditions.
+
+Future work can be further pursued in the following directions: First, establish more rigorous theoretical analysis for more complex observation patterns such as structured missing, and correspondingly improve the frequency-domain update and projection strategies. Second, introduce adaptive tubal-rank and regularization weight scheduling mechanisms to enhance robustness under extreme missing conditions, and supplement more systematic ablation studies along with time-accuracy evaluations. Third, extend the framework to larger-scale tensor data such as videos and medical images, and further improve efficiency through parallel computation on frequency-domain slices to meet the practical demands of higher-dimensional and higher-resolution scenarios.
+
+
+
+
+
+
+
+
+
+%================================================================Acknowledgements=====================================================================%
+%================================================================Acknowledgements=====================================================================%
+%================================================================Acknowledgements=====================================================================%
+\section*{Acknowledgements}
+
+This research is supported by the National Natural Science Foundation of China (12471355) and Doctoral Research Fund of Nantong University  (135420602001).
+
+%================================================================thebibliography=====================================================================%
+%================================================================thebibliography=====================================================================%
+%================================================================thebibliography=====================================================================%
+\bibliographystyle{jtfi}%使用elsarticle-num.bst文件
+%\bibliography{bib}
+\bibliography{refs}
+
+%\begin{thebibliography}{10}
+%	
+%	\bibitem{Candes2009}
+%	E.~J. Cand{\`{e}}s, B.~Recht, Exact matrix completion via convex optimization,
+%	Foundations of Computational Mathematics 9~(6) (2009) 717--772.
+%	
+%	\bibitem{Zhang2017}
+%	M.~Zhang, C.~Desrosiers, Image completion with global structure and weighted
+%	nuclear norm regularization, 2017 International Joint Conference on Neural
+%	Networks ({IJCNN}), {IEEE} (2017).
+%	
+%	\bibitem{Cai2010}
+%	J.-F. Cai, E.~J. Cand{\`{e}}s, Z.~Shen, A singular value thresholding algorithm
+%	for matrix completion, {SIAM} Journal on Optimization 20~(4) (2010)
+%	1956--1982.
+%	
+%	\bibitem{recht11a}
+%	B.~Recht, A simpler approach to matrix completion, Journal of Machine Learning
+%	Research 12~(104) (2011) 3413--3430.
+%	
+%	\bibitem{Liu2016}
+%	B.~Liu, Z.~Xu, S.~Wu, F.~Wang, Manifold regularized matrix completion for
+%	multilabel classification, Pattern Recognition Letters 80 (2016) 58--63.
+%	
+%	\bibitem{Liu2009}
+%	J.~Liu, P.~Musialski, P.~Wonka, J.~Ye, Tensor completion for estimating missing
+%	values in visual data, 2009 {IEEE} 12th International Conference on Computer
+%	Vision, {IEEE} (2009).
+%	
+%	\bibitem{Martin2013}
+%	C.~D. Martin, R.~Shafer, B.~LaRue, An order-{\textdollar}p{\textdollar} tensor
+%	factorization with applications in imaging, {SIAM} Journal on Scientific
+%	Computing 35~(1) (2013) A474--A490.
+%	
+%	\bibitem{Bengua2017}
+%	J.~A. Bengua, H.~N. Phien, H.~D. Tuan, M.~N. Do, Efficient tensor completion
+%	for color image and video recovery: Low-rank tensor train, {IEEE}
+%	Transactions on Image Processing 26~(5) (2017) 2466--2479.
+%	
+%	\bibitem{Zhou2018}
+%	P.~Zhou, C.~Lu, Z.~Lin, C.~Zhang, Tensor factorization for low-rank tensor
+%	completion, {IEEE} Transactions on Image Processing 27~(3) (2018) 1152--1163.
+%	
+%	\bibitem{Xu2017}
+%	A.-B. Xu, D.~Xie, Low-rank approximation pursuit for matrix completion,
+%	Mechanical Systems and Signal Processing 95 (2017) 77--89.
+%	
+%	\bibitem{Kiers2000towards}
+%	H.~Kiers, Towards a standardized notation and terminology in multiway analysis,
+%	Journal of Chemometrics 14 (2000) 105--122.
+%	
+%	\bibitem{Hillar2013}
+%	C.~J. Hillar, L.-H. Lim, Most tensor problems are {NP}-hard, Journal of the
+%	{ACM} 60~(6) (2013) 1--39.
+%	
+%	\bibitem{Landsberg2011}
+%	J.~Landsberg, Tensors: Geometry and Applications, American Mathematical
+%	Society,  2011.
+%	
+%	\bibitem{Tucker1966}
+%	L.~R. Tucker, Some mathematical notes on three-mode factor analysis,
+%	Psychometrika 31~(3) (1966) 279--311.
+%	
+%	\bibitem{Kolda2009}
+%	T.~G. Kolda, B.~W. Bader, Tensor decompositions and applications, {SIAM} Review
+%	51~(3) (2009) 455--500.
+%	
+%	\bibitem{Kasai2016low}
+%	H.~Kasai, B.~Mishra, Low-rank tensor completion: a riemannian manifold
+%	preconditioning approach, M.~Balcan, K.~Q. Weinberger, editors, Proceedings
+%	of the 33nd International Conference on Machine Learning, {ICML} 2016, New
+%	York City, NY, USA, June 19-24, 2016, JMLR.org, {JMLR} Workshop and
+%	Conference Proceedings, volume~48, 1012--1021 (2016).
+%	
+%	\bibitem{kilmer2008a}
+%	M.~Kilmer, C.~Martin, L.~Perrone, A third-order generalization of the matrix
+%	svd as a product of third-order tensors, Technical report, Tufts University,
+%	Computer Science Department,  2008.
+%	
+%	\bibitem{braman2010third}
+%	K.~Braman, Third-order tensors as linear operators on a space of matrices,
+%	Linear Algebra and Its Applications - LINEAR ALGEBRA APPL 433 (2010)
+%	1241--1253.
+%	
+%	\bibitem{KILMER2011641}
+%	M.~E. Kilmer, C.~D. Martin, Factorization strategies for third-order tensors,
+%	Linear Algebra and its Applications 435~(3) (2011) 641--658, special Issue:
+%	Dedication to Pete Stewart on the occasion of his 70th birthday.
+%	
+%	\bibitem{Kilmer2013}
+%	M.~E. Kilmer, K.~Braman, N.~Hao, R.~C. Hoover, Third-order tensors as operators
+%	on matrices: A theoretical and computational framework with applications in
+%	imaging, {SIAM} Journal on Matrix Analysis and Applications 34~(1) (2013)
+%	148--172.
+%	
+%	\bibitem{Semerci2014}
+%	O.~Semerci, N.~Hao, M.~E. Kilmer, E.~L. Miller, Tensor-based formulation and
+%	nuclear norm regularization for multienergy computed tomography, {IEEE}
+%	Transactions on Image Processing 23~(4) (2014) 1678--1693.
+%	
+%	\bibitem{Zhang2014}
+%	Z.~Zhang, G.~Ely, S.~Aeron, N.~Hao, M.~Kilmer, Novel methods for multilinear
+%	data completion and de-noising based on tensor-{SVD}, 2014 {IEEE} Conference
+%	on Computer Vision and Pattern Recognition, {IEEE} (2014).
+%	
+%	\bibitem{Zhang2017a}
+%	Z.~Zhang, S.~Aeron, Exact tensor completion using t-{SVD}, {IEEE} Transactions
+%	on Signal Processing 65~(6) (2017) 1511--1526.
+%	
+%	\bibitem{Gentle2001}
+%	J.~Gentle, Matrix analysis and applied linear algebra, numerical linear
+%	algebra, and applied numerical linear algebra, Journal of the American
+%	Statistical Association 96~(455) (2001) 1136--1137.
+%	
+%	\bibitem{Zheng2020}
+%	Y.~Zheng, A.-B. Xu, Tensor completion via tensor qr decomposition and
+%	$l_{2,1}$-norm minimization .
+%	
+%	\bibitem{Xu2015}
+%	Y.~Xu, , R.~Hao, W.~Yin, Z.~Su, and, Parallel matrix factorization for low-rank
+%	tensor completion, Inverse Problems {\&} Imaging 9~(2) (2015) 601--624.
+%	
+%	\bibitem{Richards1988}
+%	L.~E. Richards, I.~T. Jolliffe, Principal component analysis, Journal of
+%	Marketing Research 25~(4) (1988) 410.
+%	
+%	\bibitem{Minster2020}
+%	R.~Minster, A.~K. Saibaba, M.~E. Kilmer, Randomized algorithms for low-rank
+%	tensor decompositions in the tucker format, {SIAM} Journal on Mathematics of
+%	Data Science 2~(1) (2020) 189--215.
+%	
+%	\bibitem{Halko2011}
+%	N.~Halko, P.~G. Martinsson, J.~A. Tropp, Finding structure with randomness:
+%	Probabilistic algorithms for constructing approximate matrix decompositions,
+%	{SIAM} Review 53~(2) (2011) 217--288.
+%	
+%	\bibitem{Drineas2007}
+%	P.~Drineas, M.~W. Mahoney, A randomized algorithm for a tensor-based
+%	generalization of the singular value decomposition, Linear Algebra and its
+%	Applications 420~(2-3) (2007) 553--571.
+%	
+%\end{thebibliography}
+
+
+
+%\begin{thebibliography}{99}%{hlsbdssss}
+%\addtolength{\itemsep}{-3.5 em} % 缩小参考文献间的垂直间距
+%\setlength{\itemsep}{2pt}
+%\end{thebibliography}
+
+
+%===================================================================================================%
+%===================================================================================================%
+%===================================================================================================%
+%\begin{theorem}\label{}
+%\end{theorem}
+
+%\begin{proof}[\bf Proof]
+%\end{proof}
+
+%\begin{lemma}
+%\end{lemma}
+
+%\begin{equation*}
+%\begin{split}
+%&\mathrm{tr}\\
+%=&\mathrm{tr}\\
+%=&.
+%\end{split}
+%\end{equation*}
+
+%\begin{equation}
+%x
+%\end{equation}
+
+%\begin{eqnarray*}
+%&=&\\
+%&=&,
+%\end{eqnarray*}
+%===================================================================================================%
+%===================================================================================================%
+%===================================================================================================%
+
+
+\end{document}
