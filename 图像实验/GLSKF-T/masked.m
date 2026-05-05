@@ -35,7 +35,7 @@ y = g(:) + rho * r(:);
 end
 
 function S2 = updS(G, W, U, V, S, cgN, tol)
-lam = 1e-6;
+lam = 15;
 b = tproduct(tproduct(ttranspose(U), W .* G), V);
 A = @(x) apS(x, W, U, V, lam, size(S));
 S2 = reshape(cg_solve(A, b(:), S(:), cgN, tol), size(S));

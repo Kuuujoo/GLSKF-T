@@ -1,4 +1,4 @@
-function [Xori, Rtensor_final, Mtensor_final, psnr_hist] = GLSKF_tSVD(I, Omega, lengthscaleU, lengthscaleR, varianceU, varianceR, tapering_range, d_MaternU, d_MaternR, rg, rho, gamma, maxiter, K0, epsilon)
+function [Xori, Rtensor_final, Mtensor_final, psnr_hist, history] = GLSKF_tSVD(I, Omega, lengthscaleU, lengthscaleR, varianceU, varianceR, tapering_range, d_MaternU, d_MaternR, rg, rho, gamma, maxiter, K0, epsilon)
 % GLSKF_tSVD  视频修复算法主函数
 % 全局项：频域逐切片更新（tsvd_U/V/S），传入前对 G 乘掩码，确保缺失位置不参与拟合。
 % 局部项：空间维度使用 Matern x Wendland 锥化核，时间维度 Kr3 由 eye 初始化后经验更新。
@@ -25,6 +25,7 @@ function [Xori, Rtensor_final, Mtensor_final, psnr_hist] = GLSKF_tSVD(I, Omega, 
 %   Rtensor_final   局部分量（含均值）
 %   Mtensor_final   全局分量（含均值）
 %   psnr_hist       每轮 PSNR 记录
+%   history         每轮 MSE、RMSE、PSNR 和累计时间
 
 N = size(I);
 n1 = N(1); n2 = N(2); n3 = N(3);
@@ -79,7 +80,12 @@ z = Rtensor(:);
 train_norm = max(norm(T(:)), eps);
 X_last = X;
 psnrf = zeros(maxiter, 1);
+mse_hist = zeros(maxiter, 1);
+rmse_hist = zeros(maxiter, 1);
+elapsed_hist = zeros(maxiter, 1);
+tol_hist = zeros(maxiter, 1);
 iter = 0;
+run_timer = tic;
 
 %% 主迭代循环
 while true
@@ -128,11 +134,15 @@ while true
     % 恢复原始值域并计算 PSNR
     Xori = min(max(X + train_mean, 0), maxP);
     mse = mean((double(I(:)) - double(Xori(:))) .^ 2);
+    mse_hist(iter) = mse;
+    rmse_hist(iter) = sqrt(mse);
     psnrf(iter) = 10 * log10(maxP^2 / max(mse, eps));
+    elapsed_hist(iter) = toc(run_timer);
     fprintf('Epoch = %d, PSNR = %.6f\n', iter, psnrf(iter));
 
     % 收敛判断
     tol = norm(X(:) - X_last(:)) / train_norm;
+    tol_hist(iter) = tol;
     X_last = X;
     if (tol < epsilon) || (iter >= maxiter)
         break;
@@ -143,4 +153,8 @@ Xori = min(max(Xori, 0), maxP);
 Rtensor_final = Rtensor + train_mean;
 Mtensor_final = M + train_mean;
 psnr_hist = psnrf(1:iter);
+history = table((1:iter)', elapsed_hist(1:iter), mse_hist(1:iter), ...
+    rmse_hist(1:iter), psnrf(1:iter), tol_hist(1:iter), ...
+    'VariableNames', {'iteration', 'elapsed_time_seconds', 'MSE', ...
+    'RMSE', 'PSNR', 'relative_change'});
 end
