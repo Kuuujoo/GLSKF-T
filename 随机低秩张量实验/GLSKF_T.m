@@ -21,7 +21,7 @@ lengthscaleU        = ones(1, 2) * 30;
 varianceU           = ones(1, 2);
 lengthscaleR        = ones(1, 2) * 5;
 varianceR           = ones(1, 2);
-tapering_range      = 7;
+tapering_range      = 10;
 d_MaternU           = 3;
 d_MaternR           = 3;
 maxiter             = 20;
@@ -29,8 +29,8 @@ K0                  = 10;
 epsilon             = 1e-4;
 
 rg_list             = [7,10];
-rho_list            = [1,5,10,15,20];
-gamma_list          = [1,5,10,15,20];
+rho_list            = [0.1,0.2,1,5,10];
+gamma_list          = [0.1,0.2,1,5,10,15,20];
 
 all_summary = {};
 
